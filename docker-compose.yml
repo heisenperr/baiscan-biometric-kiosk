@@ -7,7 +7,6 @@ services:
     container_name: baiscan-frontend
     ports:
       - "80:3000" # Expose frontend on standard HTTP port 80
-
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -24,13 +23,12 @@ services:
       dockerfile: Dockerfile
     container_name: baiscan-sensor-service
     privileged: true
+    devices:
+      - "/dev/i2c-1:/dev/i2c-1"
+      - "/dev/gpiomem:/dev/gpiomem"
     volumes:
       - ./sensor-service:/app
     environment:
       - PYTHONUNBUFFERED=1
       - MOCK_SENSORS=true # Set to true to test on PC without I2C hardware
     restart: always
-
-    # Uncomment if this service exposes an API:
-    # ports:
-    #   - "5000:5000"
