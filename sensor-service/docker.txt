@@ -1,0 +1,1 @@
+docker build -t sensor-service .docker run -d \  --name sensor-service \  --privileged \  --device /dev/i2c-1 \  --device /dev/gpiomem \  sensor-service
