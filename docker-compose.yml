@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: baiscan-frontend
     ports:
-      - "4000:3000" # Changed from 3001 to 4000 to avoid ongoing conflicts
+      - "80:3000" # Expose frontend on standard HTTP port 80
 
     volumes:
       - ./frontend:/app

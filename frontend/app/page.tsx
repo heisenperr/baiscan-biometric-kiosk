@@ -1,65 +1,60 @@
-import Image from "next/image";
+import React from "react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white">
+      {/* Background decoration for a professional medical look */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-blue-600"></div>
+      
+      <section className="max-w-4xl w-full text-center animate-fade-in space-y-8">
+        {/* Subtle hospital icon representation (simplified for minimalism) */}
+        <div className="flex justify-center mb-10">
+          <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center">
+            <svg 
+              className="w-10 h-10 text-blue-600" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M9 12h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+              />
+            </svg>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-stone-900 drop-shadow-sm">
+            BaiScan: <span className="text-blue-600 font-black">B.A.I.R.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl font-light text-stone-500 uppercase tracking-[0.2em] max-w-2xl mx-auto leading-relaxed">
+            BaiScan Advanced Intelligent Raspberry Kiosk
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Minimalist divider */}
+        <div className="flex justify-center py-6">
+          <div className="w-12 h-1 bg-stone-100 rounded-full"></div>
         </div>
-      </main>
-    </div>
+
+        {/* Optional Action Button (Call to Engagement) */}
+        <div className="pt-4">
+          <button className="px-10 py-4 bg-stone-900 text-white rounded-xl font-semibold shadow-xl shadow-stone-200 hover:bg-stone-800 transition-all active:scale-95">
+            Get Started
+          </button>
+        </div>
+      </section>
+
+      {/* Footer / Copyright - Keeping it clinical */}
+      <footer className="absolute bottom-10 w-full text-center px-6">
+        <p className="text-sm text-stone-400 font-medium">
+          Professional Health Solutions &copy; 2026 BaiScan Systems
+        </p>
+      </footer>
+    </main>
   );
 }
+
