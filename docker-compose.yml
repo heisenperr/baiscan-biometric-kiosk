@@ -1,0 +1,36 @@
+services:
+  # Next.js frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: baiscan-frontend
+    ports:
+      - "4000:3000" # Changed from 3001 to 4000 to avoid ongoing conflicts
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - WATCHPACK_POLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    restart: always
+
+  # Sensor-service (Python)
+  sensor-service:
+    build:
+      context: ./sensor-service
+      dockerfile: Dockerfile
+    container_name: baiscan-sensor-service
+    privileged: true
+    volumes:
+      - ./sensor-service:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MOCK_SENSORS=true # Set to true to test on PC without I2C hardware
+    restart: always
+
+    # Uncomment if this service exposes an API:
+    # ports:
+    #   - "5000:5000"

@@ -28,3 +28,4 @@ class MLX90614Sensor:
 
     def __str__(self):
         return f"{self.name} on bus {self.bus_num}, address 0x{self.address:X}, pins={self.pin_map}"
+
