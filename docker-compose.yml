@@ -10,7 +10,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - /app/.next
+      - next_cache:/app/.next
+
     environment:
       - WATCHPACK_POLLING=true
       - NEXT_PUBLIC_API_URL=http://localhost:5000
@@ -32,3 +33,6 @@ services:
       - PYTHONUNBUFFERED=1
       - MOCK_SENSORS=true # Set to true to test on PC without I2C hardware
     restart: always
+
+volumes:
+  next_cache: {}

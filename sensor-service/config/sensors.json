@@ -1,0 +1,13 @@
+{
+  "TempSensor": {
+    "offset": 0.0
+  },
+  "ToF_Sensor": {
+    "offset": 0.0,
+    "crosstalk": 0.0
+  },
+  "LoadCell": {
+    "offset": 0.0,
+    "scale": 1.0
+  }
+}
