@@ -11,10 +11,10 @@ RUN npm install
 COPY . .
 
 # Expose the development port
-EXPOSE 3000
+EXPOSE 80
 
 # Set environment variables for Hot Reloading correctly
 ENV WATCHPACK_POLLING=true
 
-# Start Next.js in development mode
-CMD ["npm", "run", "dev"]
+# Start Next.js on port 80
+CMD ["npm", "run", "dev", "--", "-p", "80"]
