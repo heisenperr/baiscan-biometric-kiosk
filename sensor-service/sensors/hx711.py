@@ -23,7 +23,6 @@ class HX711Sensor:
         self._load_config()
 
         # Physical pin mapping for documentation/debugging
-
         self.pin_map = {
             "VCC": 4,
             "GND": 9,
@@ -31,22 +30,23 @@ class HX711Sensor:
             "SCK (Clock)": 11, # GPIO 17
         }
 
-        if not self.mock_mode and HAS_GPIO:
-            try:
-                GPIO.setmode(GPIO.BCM)
-                GPIO.setup(self.pd_sck_pin, GPIO.OUT)
-                GPIO.setup(self.dout_pin, GPIO.IN)
-                print(f"[INIT] {self.name} initialized on GPIO {dout_pin}(DT), {pd_sck_pin}(SCK)")
-                # If offset is 0, perform initial tare
-                if self.offset == 0:
-                    self.tare()
-            except Exception as e:
-                print(f"[ERROR] Failed to init HX711: {e}.")
-                if self.mock_mode:
-                    print("[INIT] Falling back to MOCK mode.")
-                else:
-                    print("[INIT] Hardware initialization failed. In production, this sensor will be unavailable.")
-                    raise e
+        if not self.mock_mode:
+            if not HAS_GPIO:
+                print(f"[ERROR] {self.name}: RPi.GPIO not installed. Switching to MOCK mode.")
+                self.mock_mode = True
+            else:
+                try:
+                    GPIO.setmode(GPIO.BCM)
+                    GPIO.setup(self.pd_sck_pin, GPIO.OUT)
+                    GPIO.setup(self.dout_pin, GPIO.IN)
+                    print(f"[INIT] {self.name} initialized on GPIO {dout_pin}(DT), {pd_sck_pin}(SCK)")
+                    # If offset is 0, perform initial tare
+                    if self.offset == 0:
+                        self.tare()
+                except Exception as e:
+                    print(f"[ERROR] Failed to init HX711: {e}.")
+                    self.mock_mode = True
+                    print("[INIT] Hardware failed. Switching to MOCK mode.")
 
     def _load_config(self):
         if os.path.exists(self.config_path):

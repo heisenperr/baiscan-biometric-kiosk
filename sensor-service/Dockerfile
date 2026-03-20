@@ -3,11 +3,15 @@ FROM python:3.11-slim
 
 # Prevent Python from buffering logs
 ENV PYTHONUNBUFFERED=1
+# Force Adafruit-Blinka to use libgpiod backend
+ENV BLINKA_GPIO_MODE=libgpiod
+# Link system-installed libraries if necessary
+ENV PYTHONPATH="${PYTHONPATH}:/usr/lib/python3/dist-packages"
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (I2C)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     i2c-tools \
@@ -20,7 +24,7 @@ RUN apt-get update && apt-get install -y \
     swig \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (better caching)
+# Copy requirements first
 COPY requirements.txt .
 
 # Install Python dependencies

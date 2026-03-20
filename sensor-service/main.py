@@ -14,11 +14,14 @@ def main():
     
     successful = True
     for sensor, status in report.items():
-        color = ""
         if status == "HEALTHY":
             print(f"  [+] {sensor}: {status}")
         elif status == "MOCK":
-            print(f"  [!] {sensor}: {status} (Non-production mode)")
+            if manager.production_mode:
+                print(f"  [!] {sensor}: {status} (CRITICAL: Hardware fallback in Production!)")
+                successful = False
+            else:
+                print(f"  [!] {sensor}: {status} (Non-production mode)")
         else:
             print(f"  [-] {sensor}: {status} !!!")
             successful = False
