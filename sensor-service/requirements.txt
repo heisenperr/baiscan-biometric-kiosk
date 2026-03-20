@@ -1,3 +1,4 @@
 smbus2
-vl53l1x
+Adafruit-Blinka
+adafruit-circuitpython-vl53l1x
 RPi.GPIO

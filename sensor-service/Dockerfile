@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN CFLAGS="-D_DEFAULT_SOURCE -D_GNU_SOURCE" pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app source
 COPY . .

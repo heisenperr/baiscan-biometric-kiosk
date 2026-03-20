@@ -4,7 +4,9 @@ import random
 import time
 
 try:
-    import VL53L1X
+    import board
+    import busio
+    import adafruit_vl53l1x
     HAS_VL53L1X = True
 except ImportError:
     HAS_VL53L1X = False
@@ -17,6 +19,7 @@ class VL53L1XSensor:
         self.config_path = config_path
         self.mock_mode = os.environ.get("MOCK_SENSORS", "false").lower() == "true"
         self.sensor = None
+        self.i2c = None
         self.offset = 0
         self.crosstalk = 0
         
@@ -24,19 +27,18 @@ class VL53L1XSensor:
         self._load_config()
 
         if not self.mock_mode and HAS_VL53L1X:
-
             try:
-                self.sensor = VL53L1X.VL53L1X(i2c_bus=bus_num, i2c_address=address)
-                self.sensor.open()
+                # Initialize I2C bus using Blinka/board
+                self.i2c = busio.I2C(board.SCL, board.SDA)
+                self.sensor = adafruit_vl53l1x.VL53L1X(self.i2c, address=address)
                 
                 # Default configuration
-                self.sensor.set_distance_mode(2)  # 1 = short, 2 = long range
-                self.sensor.set_timing_budget(50000) # 50ms
-                self.sensor.set_inter_measurement_period(60) # 60ms
+                self.sensor.distance_mode = 2  # 1 = short, 2 = long (Adafruit uses 1/2)
+                self.sensor.timing_budget = 50 # 50ms
                 
                 # Start ranging
                 self.sensor.start_ranging()
-                print(f"[INIT] {self.name} started ranging on I2C bus {bus_num}.")
+                print(f"[INIT] {self.name} (Adafruit) started ranging.")
             except Exception as e:
                 print(f"[ERROR] Failed to init VL53L1X: {e}.")
                 if self.mock_mode:
@@ -115,16 +117,20 @@ class VL53L1XSensor:
             return random.randint(500, 1500)
         
         try:
-            dist = self.sensor.get_distance()
-            return dist + self.offset
+            # Adafruit library uses .distance property (in cm, but check docs)
+            # Actually adafruit_vl53l1x.distance is in cm. We want mm.
+            dist_cm = self.sensor.distance
+            if dist_cm is None: return -1
+            return (dist_cm * 10) + self.offset
         except Exception as e:
-
             print(f"Error reading {self.name}: {e}")
             return -1
 
     def stop(self):
         if not self.mock_mode and self.sensor:
-            self.sensor.stop_ranging()
+            try:
+                self.sensor.stop_ranging()
+            except: pass
 
     def __str__(self):
         mode = "MOCK" if self.mock_mode else "REAL"
