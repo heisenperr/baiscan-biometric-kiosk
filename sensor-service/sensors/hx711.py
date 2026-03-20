@@ -40,11 +40,12 @@ class HX711Sensor:
                 # If offset is 0, perform initial tare
                 if self.offset == 0:
                     self.tare()
-            except Exception as e:
-                print(f"[ERROR] Failed to init HX711: {e}. Switching to MOCK.")
-                self.mock_mode = True
-        else:
-            self.mock_mode = True
+                print(f"[ERROR] Failed to init HX711: {e}.")
+                if self.mock_mode:
+                    print("[INIT] Falling back to MOCK mode.")
+                else:
+                    print("[INIT] Hardware initialization failed. In production, this sensor will be unavailable.")
+                    raise e
 
     def _load_config(self):
         if os.path.exists(self.config_path):

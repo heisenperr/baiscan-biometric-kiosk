@@ -20,43 +20,100 @@ class MockSensor:
 
 class SensorManager:
     def __init__(self):
-        self.mock_mode = os.environ.get("MOCK_SENSORS", "false").lower() == "true"
-        self.config_dir = "config"
+        self.app_env = os.environ.get("APP_ENV", "development").lower()
+        self.production_mode = self.app_env == "production"
+        # MOCK_SENSORS is only allowed in development
+        self.mock_mode = not self.production_mode and os.environ.get("MOCK_SENSORS", "false").lower() == "true"
         
-        # Ensure config directory exists
+        self.config_dir = "config"
         os.makedirs(self.config_dir, exist_ok=True)
         
-        if self.mock_mode:
+        self.temp_sensor = None
+        self.dist_sensor = None
+        self.weight_sensor = None
+        
+        self._initialize_sensors()
 
+    def _initialize_sensors(self):
+        if self.mock_mode:
+            print("[INIT] Environment: Development/Mock mode enabled.")
             self.temp_sensor = MockSensor(name="TempSensor")
             self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor")
             self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell")
-            print("[INIT] Environment: PC/Mock mode enabled.")
         else:
+            print(f"[INIT] Environment: {self.app_env.upper()}. Initializing physical hardware...")
+            
+            # Temp Sensor
             try:
-                # Initialize real MLX90614 sensor
                 self.temp_sensor = MLX90614Sensor(bus_num=1, address=0x5A, name="TempSensor")
-                # Initialize real VL53L1X sensor
-                self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor")
-                # Initialize real HX711 sensor
-                self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell")
-                print(f"[INIT] Initialized REAL sensors: {self.temp_sensor}, {self.dist_sensor}, {self.weight_sensor}")
             except Exception as e:
-                print(f"[ERROR] Could not initialize physical sensors: {e}")
-                print("[INIT] Falling back to Mock mode for testing.")
-                self.temp_sensor = MockSensor(name="TempSensor")
+                print(f"[ERROR] TempSensor init failed: {e}")
+                if not self.production_mode:
+                    print("[INIT] Falling back to Mock TempSensor")
+                    self.temp_sensor = MockSensor(name="TempSensor")
+                    self.mock_mode = True
+            
+            # Distance Sensor
+            try:
                 self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor")
+            except Exception as e:
+                print(f"[ERROR] ToF_Sensor init failed: {e}")
+                if not self.production_mode:
+                    self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor") # This will set its own mock_mode
+                    self.mock_mode = True
+
+            # Weight Sensor
+            try:
                 self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell")
-                self.mock_mode = True
+            except Exception as e:
+                print(f"[ERROR] LoadCell init failed: {e}")
+                if not self.production_mode:
+                    self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell") # This will set its own mock_mode
+                    self.mock_mode = True
+
+    def validate_sensors(self):
+        """
+        Validates the status of all sensors and returns a status report.
+        """
+        report = {}
+        
+        # Validate Temp
+        if self.temp_sensor:
+            is_mock = isinstance(self.temp_sensor, MockSensor)
+            report["TempSensor"] = "MOCK" if is_mock else "HEALTHY"
+        else:
+            report["TempSensor"] = "FAILED"
+
+        # Validate Distance
+        if self.dist_sensor:
+            if self.dist_sensor.mock_mode:
+                report["ToF_Sensor"] = "MOCK"
+            else:
+                # Basic check: try to read (though -1 might be valid distance, 
+                # usually initialization success is enough for status)
+                report["ToF_Sensor"] = "HEALTHY"
+        else:
+            report["ToF_Sensor"] = "FAILED"
+
+        # Validate Weight
+        if self.weight_sensor:
+            if self.weight_sensor.mock_mode:
+                report["LoadCell"] = "MOCK"
+            else:
+                report["LoadCell"] = "HEALTHY"
+        else:
+            report["LoadCell"] = "FAILED"
+
+        return report
 
     def collect(self):
         return {
-            "temp_sensor": str(self.temp_sensor),
-            "temperature": self.temp_sensor.read_temp(),
-            "dist_sensor": str(self.dist_sensor),
-            "distance_mm": self.dist_sensor.read_distance(),
-            "weight_sensor": str(self.weight_sensor),
-            "weight_g": self.weight_sensor.get_weight()
+            "temp_sensor": str(self.temp_sensor) if self.temp_sensor else "None",
+            "temperature": self.temp_sensor.read_temp() if self.temp_sensor else None,
+            "dist_sensor": str(self.dist_sensor) if self.dist_sensor else "None",
+            "distance_mm": self.dist_sensor.read_distance() if self.dist_sensor else None,
+            "weight_sensor": str(self.weight_sensor) if self.weight_sensor else "None",
+            "weight_g": self.weight_sensor.get_weight() if self.weight_sensor else None
         }
 
 
