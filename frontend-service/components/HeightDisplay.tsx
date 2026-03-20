@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface HeightData {
@@ -10,98 +10,81 @@ interface HeightData {
   timestamp: string;
 }
 
-export default function HeightDisplay() {
+interface HeightDisplayProps {
+  isActive: boolean;
+  onBack: () => void;
+}
+
+export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) {
   const [height, setHeight] = useState<number | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isMeasuring, setIsMeasuring] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+  const isActiveRef = useRef(isActive);
 
   useEffect(() => {
-    // Determine backend URL (fallback to current host:3001)
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 
-                      `http://${window.location.hostname}:3001`;
+    isActiveRef.current = isActive;
+  }, [isActive]);
+
+  useEffect(() => {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ||
+      `http://${window.location.hostname}:3001`;
     
-    console.log(`[HEIGHT-DISPLAY] 📡 Attempting Socket.IO connection to: ${backendUrl}`);
-    console.log(`[HEIGHT-DISPLAY] 🏠 Current Hostname: ${window.location.hostname}`);
-    
-    const socket: Socket = io(backendUrl, {
+    const socket = io(backendUrl, {
       transports: ["websocket", "polling"],
       reconnectionAttempts: 5
     });
 
-    socket.on("connect", () => {
-      console.log("[SOCKET] Connected to backend");
-      setIsConnected(true);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("[SOCKET] Disconnected from backend");
-      setIsConnected(false);
-    });
+    socketRef.current = socket;
 
     socket.on("sensor:height", (data: HeightData) => {
-      if (isMeasuring) {
+      if (isActiveRef.current) {
         setHeight(data.value);
       }
     });
 
     return () => {
       socket.disconnect();
+      socketRef.current = null;
     };
-  }, [isMeasuring]);
-
-  const toggleMeasurement = () => {
-    setIsMeasuring(!isMeasuring);
-    if (!isMeasuring) setHeight(null);
-  };
+  }, []);
 
   return (
-    <div className="flex flex-col items-center space-y-6">
-      <div className="relative group">
-        <div className={`w-64 h-64 rounded-full border-4 ${isMeasuring ? 'border-blue-500 animate-pulse' : 'border-stone-100'} flex flex-col items-center justify-center transition-all duration-500 bg-white shadow-2xl overflow-hidden`}>
-          {isMeasuring ? (
-            <div className="text-center animate-in fade-in zoom-in duration-500">
-              <span className="text-6xl font-black text-blue-600">
-                {height !== null ? height : "--"}
-              </span>
-              <span className="block text-sm font-bold text-stone-400 uppercase tracking-widest mt-2">
-                Millimeters
-              </span>
-            </div>
-          ) : (
-            <div className="text-center text-stone-300 group-hover:text-stone-400 transition-colors">
-              <svg className="w-16 h-16 mx-auto mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-              <span className="text-xs uppercase tracking-[0.3em] font-bold">Ready</span>
-            </div>
-          )}
-          
-          {/* Connection Status Indicator */}
-          <div className="absolute bottom-6 flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} shadow-[0_0_8px_rgba(34,197,94,0.5)]`}></div>
-            <span className="text-[10px] font-black uppercase tracking-tighter text-stone-400">
-              {isConnected ? "Live" : "Offline"}
+    <div className="flex flex-col items-center animate-in fade-in zoom-in duration-1000 w-full max-w-4xl mx-auto py-4 md:py-10 px-4 md:px-6">
+      {/* Massive Back Interaction - Optimized for small screens */}
+      <button 
+        onClick={onBack}
+        className="self-start mb-8 md:mb-16 text-stone-300 hover:text-blue-600 transition-all flex items-center space-x-3 md:space-x-4 font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-sm group active:scale-95"
+      >
+        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-stone-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+          <svg className="w-5 h-5 md:w-6 md:h-6 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+          </svg>
+        </div>
+        <span>Back to Selection</span>
+      </button>
+
+      <div className="relative w-full flex flex-col items-center">
+        {/* Massive Circle Display - Responsive Sizing */}
+        <div className={`
+          w-64 h-64 sm:w-[28rem] sm:h-[28rem] md:w-[32rem] md:h-[32rem] rounded-[3rem] sm:rounded-[6rem] border-4 sm:border-8 transition-all duration-1000 bg-white shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] md:shadow-[0_60px_100px_-20px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center
+          ${isActive ? 'border-blue-500' : 'border-stone-100'}
+        `}>
+          <div className="text-center relative">
+            <span className="text-8xl sm:text-[10rem] md:text-[14rem] font-black text-stone-900 tracking-tighter tabular-nums leading-none">
+              {height !== null ? Math.round(height) : "--"}
+            </span>
+            <span className="block text-sm sm:text-xl md:text-2xl font-black text-blue-600 uppercase tracking-[0.5em] mt-1 sm:mt-2 opacity-50">
+              mm
             </span>
           </div>
         </div>
+
+        <div className="mt-12 md:mt-20 text-center space-y-2 md:space-y-4">
+          <h2 className="text-3xl md:text-6xl font-black text-stone-900 uppercase tracking-tighter leading-none">Scanning Height</h2>
+          <p className="text-sm md:text-xl text-stone-300 font-bold uppercase tracking-[0.2em] md:tracking-[0.4em] max-w-sm mx-auto">
+            Please keep your back straight
+          </p>
+        </div>
       </div>
-
-      <button
-        onClick={toggleMeasurement}
-        className={`px-12 py-5 rounded-2xl font-black uppercase tracking-[0.1em] transition-all transform active:scale-95 shadow-2xl ${
-          isMeasuring 
-            ? 'bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100' 
-            : 'bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-1 shadow-blue-200'
-        }`}
-      >
-        {isMeasuring ? "Stop Session" : "Get Height"}
-      </button>
-
-      {isMeasuring && (
-        <p className="text-xs text-stone-400 font-bold uppercase tracking-widest animate-pulse">
-          Streaming data from VL53L1X...
-        </p>
-      )}
     </div>
   );
 }
