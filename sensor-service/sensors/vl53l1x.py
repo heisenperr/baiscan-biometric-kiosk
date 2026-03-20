@@ -24,7 +24,7 @@ class VL53L1XSensor:
             
             # Default to Long range (2)
             self.sensor.distance_mode = 2
-            self.sensor.timing_budget = 50
+            self.sensor.timing_budget = 100
             
             self.sensor.start_ranging()
             return True
@@ -36,9 +36,8 @@ class VL53L1XSensor:
     def distance(self):
         """Returns distance in mm"""
         if self.sensor:
-            dist = self.sensor.distance
-            if dist is not None:
-                return dist * 10 # Convert cm to mm
+            # Adafruit's VL53L1X library already returns values in millimeters
+            return self.sensor.distance
         return None
 
     def stop(self):
