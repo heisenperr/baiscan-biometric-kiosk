@@ -16,8 +16,12 @@ export default function HeightDisplay() {
   const [isMeasuring, setIsMeasuring] = useState(false);
 
   useEffect(() => {
-    // Connect to the Node.js backend
-    const socket: Socket = io("http://localhost:3001");
+    // Determine backend URL (use env var or fallback to current host:3001)
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 
+                      `http://${window.location.hostname}:3001`;
+    
+    console.log(`[SOCKET] Connecting to: ${backendUrl}`);
+    const socket: Socket = io(backendUrl);
 
     socket.on("connect", () => {
       console.log("[SOCKET] Connected to backend");
