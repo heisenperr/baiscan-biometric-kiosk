@@ -1,4 +1,4 @@
-smbus2
-Adafruit-Blinka
+adafruit-blinka
 adafruit-circuitpython-vl53l1x
-gpiod
+lgpio
+smbus2
