@@ -18,6 +18,10 @@ class SensorManager:
         self.app_env = os.environ.get("APP_ENV", "development").lower()
         self.production_mode = self.app_env == "production"
         
+        # Debugging: show what environment we are seeing
+        print(f"[DEBUG] APP_ENV: {self.app_env}")
+        print(f"[DEBUG] MOCK_SENSORS: {os.environ.get('MOCK_SENSORS')}")
+        
         self.config_dir = "config"
         os.makedirs(self.config_dir, exist_ok=True)
         

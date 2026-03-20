@@ -8,7 +8,8 @@ try:
     import busio
     import adafruit_vl53l1x
     HAS_VL53L1X = True
-except ImportError:
+except ImportError as e:
+    print(f"[DEBUG] VL53L1X Import Error: {e}")
     HAS_VL53L1X = False
 
 class VL53L1XSensor:
