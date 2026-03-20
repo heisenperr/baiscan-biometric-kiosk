@@ -17,9 +17,13 @@ services:
       context: ./backend-service
     ports:
       - "3001:3001"
+    volumes:
+      - ./backend-service:/app
+      - /app/node_modules
     environment:
       - PORT=3001
       - SENSOR_SERVICE_URL=http://sensor-service:8000
+    command: npm run dev
     depends_on:
       - sensor-service
     restart: always
@@ -29,6 +33,10 @@ services:
       context: ./frontend-service
     ports:
       - "80:80"
+    volumes:
+      - ./frontend-service:/app
+      - /app/node_modules
+      - /app/.next
     environment:
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
