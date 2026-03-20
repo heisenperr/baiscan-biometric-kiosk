@@ -19,6 +19,16 @@ class MockSensor:
         return f"{self.name} (MOCK) - Simulation Mode"
 
 class SensorManager:
+    # Hardcoded Sensor Parameters
+    TEMP_BUS = 1
+    TEMP_ADDR = 0x5A
+    
+    TOF_BUS = 1
+    TOF_ADDR = 0x29
+    
+    HX711_DOUT = 27
+    HX711_SCK = 17
+
     def __init__(self):
         self.app_env = os.environ.get("APP_ENV", "development").lower()
         self.production_mode = self.app_env == "production"
@@ -38,14 +48,14 @@ class SensorManager:
         if self.mock_mode:
             print("[INIT] Environment: Development/Mock mode enabled.")
             self.temp_sensor = MockSensor(name="TempSensor")
-            self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor")
-            self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell")
+            self.dist_sensor = VL53L1XSensor(bus_num=self.TOF_BUS, address=self.TOF_ADDR, name="ToF_Sensor")
+            self.weight_sensor = HX711Sensor(dout_pin=self.HX711_DOUT, pd_sck_pin=self.HX711_SCK, name="LoadCell")
         else:
             print(f"[INIT] Environment: {self.app_env.upper()}. Initializing physical hardware...")
             
             # Temp Sensor
             try:
-                self.temp_sensor = MLX90614Sensor(bus_num=1, address=0x5A, name="TempSensor")
+                self.temp_sensor = MLX90614Sensor(bus_num=self.TEMP_BUS, address=self.TEMP_ADDR, name="TempSensor")
             except Exception as e:
                 print(f"[ERROR] TempSensor init failed: {e}")
                 if not self.production_mode:
@@ -55,20 +65,20 @@ class SensorManager:
             
             # Distance Sensor
             try:
-                self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor")
+                self.dist_sensor = VL53L1XSensor(bus_num=self.TOF_BUS, address=self.TOF_ADDR, name="ToF_Sensor")
             except Exception as e:
                 print(f"[ERROR] ToF_Sensor init failed: {e}")
                 if not self.production_mode:
-                    self.dist_sensor = VL53L1XSensor(bus_num=1, address=0x29, name="ToF_Sensor") # This will set its own mock_mode
+                    self.dist_sensor = VL53L1XSensor(bus_num=self.TOF_BUS, address=self.TOF_ADDR, name="ToF_Sensor")
                     self.mock_mode = True
 
             # Weight Sensor
             try:
-                self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell")
+                self.weight_sensor = HX711Sensor(dout_pin=self.HX711_DOUT, pd_sck_pin=self.HX711_SCK, name="LoadCell")
             except Exception as e:
                 print(f"[ERROR] LoadCell init failed: {e}")
                 if not self.production_mode:
-                    self.weight_sensor = HX711Sensor(dout_pin=27, pd_sck_pin=17, name="LoadCell") # This will set its own mock_mode
+                    self.weight_sensor = HX711Sensor(dout_pin=self.HX711_DOUT, pd_sck_pin=self.HX711_SCK, name="LoadCell")
                     self.mock_mode = True
 
     def validate_sensors(self):
