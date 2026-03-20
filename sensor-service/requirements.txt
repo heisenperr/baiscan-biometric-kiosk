@@ -2,3 +2,5 @@ adafruit-blinka
 adafruit-circuitpython-vl53l1x
 lgpio
 smbus2
+fastapi
+uvicorn

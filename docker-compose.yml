@@ -1,37 +1,36 @@
 services:
-  # Next.js frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: baiscan-frontend
-    ports:
-      - "80:3000" # Expose frontend on standard HTTP port 80
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - next_cache:/app/.next
-
-    environment:
-      - WATCHPACK_POLLING=true
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-    restart: always
-
-  # Sensor-service (Python)
   sensor-service:
     build:
       context: ./sensor-service
-      dockerfile: Dockerfile
-    container_name: baiscan-sensor-service
     privileged: true
-    devices:
-      - "/dev/i2c-1:/dev/i2c-1"
-      - "/dev/gpiomem:/dev/gpiomem"
     volumes:
-      - ./sensor-service:/app
-    env_file:
-      - ./sensor-service/.env
+      - /dev:/dev
+    devices:
+      - /dev/i2c-1:/dev/i2c-1
+    environment:
+      - PYTHONUNBUFFERED=1
+      - APP_ENV=production
     restart: always
 
-volumes:
-  next_cache: {}
+  backend-service:
+    build:
+      context: ./backend-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - SENSOR_SERVICE_URL=http://sensor-service:8000
+    depends_on:
+      - sensor-service
+    restart: always
+
+  frontend-service:
+    build:
+      context: ./frontend-service
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+    depends_on:
+      - backend-service
+    restart: always
