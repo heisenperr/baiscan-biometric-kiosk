@@ -37,6 +37,7 @@ class VL53L1XSensor:
                 # Start ranging
                 self.sensor.start_ranging()
                 print(f"[INIT] {self.name} started ranging on I2C bus {bus_num}.")
+            except Exception as e:
                 print(f"[ERROR] Failed to init VL53L1X: {e}.")
                 if self.mock_mode:
                     print("[INIT] Falling back to MOCK mode.")

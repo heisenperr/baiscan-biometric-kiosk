@@ -40,6 +40,7 @@ class HX711Sensor:
                 # If offset is 0, perform initial tare
                 if self.offset == 0:
                     self.tare()
+            except Exception as e:
                 print(f"[ERROR] Failed to init HX711: {e}.")
                 if self.mock_mode:
                     print("[INIT] Falling back to MOCK mode.")
