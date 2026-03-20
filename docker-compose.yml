@@ -29,9 +29,8 @@ services:
       - "/dev/gpiomem:/dev/gpiomem"
     volumes:
       - ./sensor-service:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - MOCK_SENSORS=true # Set to true to test on PC without I2C hardware
+    env_file:
+      - ./sensor-service/.env
     restart: always
 
 volumes:
