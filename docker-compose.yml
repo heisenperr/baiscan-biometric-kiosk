@@ -30,7 +30,6 @@ services:
     ports:
       - "80:80"
     environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
     depends_on:

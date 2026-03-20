@@ -16,12 +16,17 @@ export default function HeightDisplay() {
   const [isMeasuring, setIsMeasuring] = useState(false);
 
   useEffect(() => {
-    // Determine backend URL (use env var or fallback to current host:3001)
+    // Determine backend URL (fallback to current host:3001)
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 
                       `http://${window.location.hostname}:3001`;
     
-    console.log(`[SOCKET] Connecting to: ${backendUrl}`);
-    const socket: Socket = io(backendUrl);
+    console.log(`[HEIGHT-DISPLAY] 📡 Attempting Socket.IO connection to: ${backendUrl}`);
+    console.log(`[HEIGHT-DISPLAY] 🏠 Current Hostname: ${window.location.hostname}`);
+    
+    const socket: Socket = io(backendUrl, {
+      transports: ["websocket", "polling"],
+      reconnectionAttempts: 5
+    });
 
     socket.on("connect", () => {
       console.log("[SOCKET] Connected to backend");
