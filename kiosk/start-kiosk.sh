@@ -20,26 +20,13 @@ echo "------------------------------------------"
 # Ensure Chromium launches on the primary display
 export DISPLAY=:0
 
-echo "Cleaning previous state..."
+# CRITICAL: Kill any STALE instances before starting the new flash screen
+echo "Cleaning existing browser sessions..."
+pkill -f chromium || true
+sleep 1
 
-# Kill any existing Chromium instances to prevent "Session Crashed" popups
-pkill -f chromium
-
-# Stop containers and remove orphans
-docker compose down --remove-orphans
-
-# CRITICAL: Fix for "OS Error 22" and "Write Batch" errors
-# Deleting the cache ensures Next.js starts with a clean slate
-echo "Clearing Next.js build cache..."
-rm -rf frontend-service/.next
-
-# 3. Start containers
-# Docker Compose will now pick up the $ALLOWED_HOST variable
-echo "Starting containers..."
-docker compose up -d
-
-# 4. Launch Splash Screen
-# This gives the user something to look at while the containers warm up
+# 3. Launch NEW Splash Screen Immediately
+# This gives the user something to look at while the Docker cleanup and containers warm up
 echo "Launching splash screen..."
 WORKING_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$WORKING_DIR/start-kiosk.html" ]; then
@@ -51,7 +38,6 @@ else
 fi
 
 # Launch Chromium with splash screen in background
-# We save the PID if possible, but pkill is safer for Chromium's multi-process model
 chromium \
   --kiosk "$SPLASH_URL" \
   --no-first-run \
@@ -66,6 +52,21 @@ chromium \
   --check-for-update-interval=31536000 \
   --disable-pinch \
   --overscroll-history-navigation=0 &
+
+echo "Cleaning previous state..."
+
+# Stop containers and remove orphans (Don't kill chromium again here)
+docker compose down --remove-orphans
+
+# CRITICAL: Fix for "OS Error 22" and "Write Batch" errors
+# Deleting the cache ensures Next.js starts with a clean slate
+echo "Clearing Next.js build cache..."
+rm -rf frontend-service/.next
+
+# 4. Start containers
+# Docker Compose will now pick up the $ALLOWED_HOST variable
+echo "Starting containers..."
+docker compose up -d
 
 # 5. Wait until frontend responds
 echo "Waiting for frontend at $URL ..."
