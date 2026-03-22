@@ -40,6 +40,7 @@ services:
     environment:
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
+      - ALLOWED_HOST=${ALLOWED_HOST:-localhost}
     depends_on:
       - backend-service
     restart: always
