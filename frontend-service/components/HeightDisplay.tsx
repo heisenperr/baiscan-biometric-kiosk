@@ -29,6 +29,8 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ||
       `http://${window.location.hostname}:3001`;
 
+    console.log(`[SOCKET] Connecting to backend at: ${backendUrl}`);
+
     const socket = io(backendUrl, {
       transports: ["websocket", "polling"],
       reconnectionAttempts: 5
