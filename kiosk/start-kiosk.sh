@@ -2,7 +2,7 @@
 
 # 1. Configuration & Path Detection
 clear
-echo "Initializing Kiosk System..."
+echo "Initializing Kiosk System (Low-RAM Optimization)..."
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 export DISPLAY=:0
@@ -23,14 +23,13 @@ echo "Detected IP: $ALLOWED_HOST"
 echo "Target URL:  $URL"
 echo "------------------------------------------"
 
-# 3. Memory & Resource Hardening
-# Avoid /tmp (RAM-based) for profiles. We use a disk-based folder to save RAM.
+# 3. Memory Hardening
+# Using a persistent splash profile on disk to reduce RAM pressure.
 SPLASH_PROFILE="$SCRIPT_DIR/.splash-profile"
 
 echo "Releasing stale memory..."
 pkill -9 -f chromium &> /dev/null || true
 pkill -9 -f chromium-browser &> /dev/null || true
-rm -rf "$SPLASH_PROFILE" &> /dev/null
 sleep 1
 
 # 4. Splash Screen Path Detection
@@ -48,8 +47,7 @@ else
     SPLASH_URL="$URL"
 fi
 
-# 5. Launch Splash (Low-RAM Strategy)
-# disk-cache-size and media-cache-size are set to minimal to prevent RAM bloat.
+# 5. Launch Splash (Ultra-Low-RAM Strategy)
 echo "Starting low-resource splash..."
 "$CHROME_BIN" \
   --kiosk \
@@ -57,6 +55,8 @@ echo "Starting low-resource splash..."
   --background-color='#000000' \
   --disk-cache-size=1048576 \
   --media-cache-size=1048576 \
+  --disable-gpu-program-cache \
+  --disable-gpu-shader-disk-cache \
   --no-first-run \
   --noerrdialogs \
   --disable-infobars \
@@ -68,31 +68,34 @@ echo "Starting low-resource splash..."
   --overscroll-history-navigation=0 \
   "$SPLASH_URL" &
 
-# Wait for visuals to render
-sleep 4
+# Wait for visuals to render fully before Docker load starts
+sleep 6
 
-# 6. Container Lifecycle
-echo "Restoring system containers..."
+# 6. Service Restoration
+echo "Restoring system services (preserving build)..."
+# !!! IMPORTANT: We NO LONGER delete the .next folder. 
+# Recompiling Next.js on a 2GB Pi 5 will freeze the system.
 docker compose down --remove-orphans &> /dev/null
-rm -rf frontend-service/.next
-
-echo "Starting system services..."
 docker compose up -d &> /dev/null
 
-# 7. Transition Health Check
+# Let the Pi's CPU settle after container startup before polling
+sleep 15
+
+# 7. Transition Health Check (Low Polling Frequency)
 echo "Warming up services..."
 while true; do
-    STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+    # Only poll every 5 seconds to minimize CPU/RAM contention
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 "$URL")
     if [ "$STATUS" = "200" ]; then
-        echo "Frontend is ready. Finalizing transition..."
+        echo "Frontend is ready. Finalizing handover..."
         break
     else
-        sleep 2
+        sleep 5
     fi
 done
 
 # 8. Seamless Handover
-# Launch main app in default profile. One window covers the other.
+echo "Handing over to live kiosk..."
 "$CHROME_BIN" \
   --kiosk \
   --background-color='#000000' \
@@ -106,12 +109,11 @@ done
   --incognito \
   "$URL" &
 
-# Allow time for initial rendering
-sleep 5
+# Allow time for initial app rendering
+sleep 10
 
 # 9. Resource Release
-# Kill the splash screen process tree entirely.
-# This prevents background tabs from eating memory.
+# Purge the splash process entirely to free up RAM for the main app
 pkill -9 -f "$SPLASH_PROFILE" &> /dev/null
 
-echo "Kiosk is active. Memory optimization complete."
+echo "Kiosk is active. Enjoy!"
