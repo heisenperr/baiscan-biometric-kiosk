@@ -28,16 +28,30 @@ sleep 1
 # 3. Launch NEW Splash Screen Immediately
 # This gives the user something to look at while the Docker cleanup and containers warm up
 echo "Launching splash screen..."
-WORKING_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "$WORKING_DIR/start-kiosk.html" ]; then
-    SPLASH_URL="file://$WORKING_DIR/start-kiosk.html"
-elif [ -f "$WORKING_DIR/../start-kiosk.html" ]; then
-    SPLASH_URL="file://$WORKING_DIR/../start-kiosk.html"
+
+# Determine the absolute path to the HTML splash screen
+# We check the directory of this script, and then the parent just in case.
+SCRIPT_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+
+if [ -f "$SCRIPT_DIR/start-kiosk.html" ]; then
+    ABS_SPLASH_PATH="$SCRIPT_DIR/start-kiosk.html"
+elif [ -f "$SCRIPT_DIR/../start-kiosk.html" ]; then
+    ABS_SPLASH_PATH="$(readlink -f "$SCRIPT_DIR/../start-kiosk.html")"
 else
+    ABS_SPLASH_PATH=""
+fi
+
+if [ -n "$ABS_SPLASH_PATH" ]; then
+    SPLASH_URL="file://$ABS_SPLASH_PATH"
+    echo "Found splash screen at: $SPLASH_URL"
+else
+    echo "WARNING: Splash screen file not found. Falling back to default URL check."
     SPLASH_URL="$URL"
 fi
 
 # Launch Chromium with splash screen in background
+# Triple slash file:/// is standard for Linux absolute paths
 chromium \
   --kiosk "$SPLASH_URL" \
   --no-first-run \
@@ -52,6 +66,11 @@ chromium \
   --check-for-update-interval=31536000 \
   --disable-pinch \
   --overscroll-history-navigation=0 &
+
+# Give Chromium a few seconds to fully initialize and display the GIFs 
+# before we start the heavy lifting (docker compose down, etc.)
+echo "Waiting for splash screen to initialize..."
+sleep 5
 
 echo "Cleaning previous state..."
 
