@@ -14,7 +14,11 @@ URL="http://$ALLOWED_HOST"
 echo "------------------------------------------"
 echo "Detected IP: $ALLOWED_HOST"
 echo "Target URL:  $URL"
+echo "Launching the flash screen (for debug only)"
 echo "------------------------------------------"
+
+# Ensure Chromium launches on the primary display
+export DISPLAY=:0
 
 echo "Cleaning previous state..."
 
