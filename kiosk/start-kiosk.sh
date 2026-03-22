@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # 1. Configuration & Path Detection
 clear
@@ -75,8 +76,8 @@ sleep 6
 echo "Restoring system services (preserving build)..."
 # !!! IMPORTANT: We NO LONGER delete the .next folder. 
 # Recompiling Next.js on a 2GB Pi 5 will freeze the system.
-docker compose down --remove-orphans &> /dev/null
-docker compose up -d &> /dev/null
+docker compose down --remove-orphans
+docker compose up -d
 
 # Let the Pi's CPU settle after container startup before polling
 sleep 15
