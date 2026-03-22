@@ -30,7 +30,6 @@ sleep 1
 echo "Launching splash screen..."
 
 # Determine the absolute path to the HTML splash screen
-# We check the directory of this script, then the current path, then the parent.
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 CURR_DIR="$(pwd)"
@@ -39,9 +38,14 @@ echo "Debugging path detection:"
 echo "  Script Path: $SCRIPT_PATH"
 echo "  Script Dir:  $SCRIPT_DIR"
 echo "  Current Dir: $CURR_DIR"
+echo "  Listing current dir files:"
+ls -F "$SCRIPT_DIR"
 
+# Search order: Same dir, kiosk/ sub dir, parent dir
 if [ -f "$SCRIPT_DIR/start-kiosk.html" ]; then
     ABS_SPLASH_PATH="$SCRIPT_DIR/start-kiosk.html"
+elif [ -f "$SCRIPT_DIR/kiosk/start-kiosk.html" ]; then
+    ABS_SPLASH_PATH="$SCRIPT_DIR/kiosk/start-kiosk.html"
 elif [ -f "$CURR_DIR/start-kiosk.html" ]; then
     ABS_SPLASH_PATH="$CURR_DIR/start-kiosk.html"
 elif [ -f "$SCRIPT_DIR/../start-kiosk.html" ]; then
@@ -55,24 +59,20 @@ if [ -n "$ABS_SPLASH_PATH" ]; then
     echo "SUCCESS: Found splash screen at: $SPLASH_URL"
 else
     echo "WARNING: Splash screen file 'start-kiosk.html' NOT FOUND anywhere."
-    echo "Falling back to the main app URL: $URL"
+    echo "Please ensure start-kiosk.html is in the same folder as this script."
     SPLASH_URL="$URL"
 fi
 
-# Launch Chromium with splash screen in background
-# Triple slash file:/// is standard for Linux absolute paths
+# Launch Chromium with simplified kiosk flags for maximum compatibility
 chromium \
   --kiosk "$SPLASH_URL" \
   --no-first-run \
   --noerrdialogs \
   --disable-infobars \
   --disable-session-crashed-bubble \
-  --disable-translate \
-  --disable-features=Translate \
   --password-store=basic \
   --incognito \
   --allow-file-access-from-files \
-  --check-for-update-interval=31536000 \
   --disable-pinch \
   --overscroll-history-navigation=0 &
 
