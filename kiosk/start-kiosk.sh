@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # 1. Configuration & Path
-cd /home/raspi/Desktop/baiscan-biometric-kiosk
+# Move to the project root (assumed to be one level up from this script in 'kiosk/')
+# Or if this script is in the root, stay here.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.." || cd "$SCRIPT_DIR"
 
 # 2. Get the real IP of the Raspberry Pi immediately
 # This ensures Next.js knows which origin to allow
@@ -24,42 +27,50 @@ docker compose down --remove-orphans
 # CRITICAL: Fix for "OS Error 22" and "Write Batch" errors
 # Deleting the cache ensures Next.js starts with a clean slate
 echo "Clearing Next.js build cache..."
-rm -rf .next
+rm -rf frontend-service/.next
 
 # 3. Start containers
 # Docker Compose will now pick up the $ALLOWED_HOST variable
 echo "Starting containers..."
 docker compose up -d
 
-# 4. Wait until containers are running
-echo "Waiting for containers to initialize..."
-while true; do
-    CONTAINERS=$(docker compose ps -q)
-    if [ -z "$CONTAINERS" ]; then
-        echo "No containers found. Exiting."
-        exit 1
-    fi
+# 4. Launch Splash Screen
+# This gives the user something to look at while the containers warm up
+echo "Launching splash screen..."
+WORKING_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$WORKING_DIR/start-kiosk.html" ]; then
+    SPLASH_URL="file://$WORKING_DIR/start-kiosk.html"
+elif [ -f "$WORKING_DIR/../start-kiosk.html" ]; then
+    SPLASH_URL="file://$WORKING_DIR/../start-kiosk.html"
+else
+    SPLASH_URL="$URL"
+fi
 
-    RUNNING=$(docker inspect -f '{{.State.Status}}' $CONTAINERS | grep -c "running")
-    TOTAL=$(echo "$CONTAINERS" | wc -l)
+# Launch Chromium with splash screen in background
+# We save the PID if possible, but pkill is safer for Chromium's multi-process model
+chromium \
+  --kiosk "$SPLASH_URL" \
+  --no-first-run \
+  --noerrdialogs \
+  --disable-infobars \
+  --disable-session-crashed-bubble \
+  --disable-translate \
+  --disable-features=Translate \
+  --password-store=basic \
+  --incognito \
+  --allow-file-access-from-files \
+  --check-for-update-interval=31536000 \
+  --disable-pinch \
+  --overscroll-history-navigation=0 &
 
-    if [ "$RUNNING" -eq "$TOTAL" ]; then
-        echo "All containers running ($RUNNING/$TOTAL)."
-        break
-    else
-        echo "Waiting for services... ($RUNNING/$TOTAL)"
-        sleep 2
-    fi
-done
-
-# 5. Wait until frontend responds (prevents Chromium from showing 'Site not found')
+# 5. Wait until frontend responds
 echo "Waiting for frontend at $URL ..."
 while true; do
     # Check if the server is returning a 200 OK
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
 
     if [ "$STATUS" = "200" ]; then
-        echo "Frontend is ready!"
+        echo "Frontend is ready! Transitioning from splash screen..."
         break
     else
         echo "Frontend status: $STATUS (Still compiling...)"
@@ -67,11 +78,13 @@ while true; do
     fi
 done
 
-echo "Launching kiosk..."
+# 6. Final Launch
+# Kill the splash screen browser and launch the final app
+# A brief 1s sleep ensures the port is fully released if necessary
+pkill -f chromium
+sleep 1
 
-# 6. Launch Chromium in clean kiosk mode
-# Added --disable-features=Translate to prevent the translate bubble
-# Added --no-first-run to skip welcome screens
+echo "Launching kiosk mode..."
 chromium \
   --kiosk "$URL" \
   --no-first-run \

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initializing Kiosk...</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --accent-color: #00ffcc;
+            --text-color: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #gif-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .gif {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Keeps aspect ratio for the 7-inch display */
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .gif.active {
+            opacity: 1;
+        }
+
+        #overlay {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 20px 0;
+        }
+
+        .status-text {
+            color: var(--text-color);
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0,255,204,0.5);
+            margin: 0;
+        }
+
+        .loading-bar-container {
+            width: 300px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin: 15px auto 0;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+            animation: loading 2s infinite ease-in-out;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            50% { left: 0%; }
+            100% { left: 100%; }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="gif-container">
+        <!-- These match the file names found in your kiosk/gif directory -->
+        <!-- Note: If the HTML is in kiosk/, the path needs to be gif/xxx.gif -->
+        <img src="gif/shocked.gif" class="gif active" id="gif-0">
+        <img src="gif/shocked-gif-1.gif" class="gif" id="gif-1">
+        <img src="gif/shocked-gif-2.gif" class="gif" id="gif-2">
+    </div>
+
+    <div id="overlay">
+        <p class="status-text">SYSTEM INITIALIZING</p>
+        <div class="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+
+    <script>
+        const gifs = document.querySelectorAll('.gif');
+        let currentIdx = 0;
+
+        // Cycle through GIFs every 5 seconds
+        setInterval(() => {
+            gifs[currentIdx].classList.remove('active');
+            currentIdx = (currentIdx + 1) % gifs.length;
+            gifs[currentIdx].classList.add('active');
+        }, 5000);
+    </script>
+</body>
+</html>
