@@ -12,6 +12,21 @@ services:
       - APP_ENV=production
     restart: always
 
+  db:
+    image: mysql:8.0
+    # performance-schema=OFF is crucial for saving RAM on a 2GB Raspberry Pi
+    command: --default-authentication-plugin=mysql_native_password --performance-schema=OFF
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-baiscan_db}
+      - MYSQL_USER=${MYSQL_USER:-baiscan_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-baiscan_password}
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+
   backend-service:
     build:
       context: ./backend-service
@@ -23,9 +38,14 @@ services:
     environment:
       - PORT=3001
       - SENSOR_SERVICE_URL=http://sensor-service:8000
+      - DB_HOST=db
+      - DB_USER=${MYSQL_USER:-baiscan_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-baiscan_password}
+      - DB_NAME=${MYSQL_DATABASE:-baiscan_db}
     command: npm run dev
     depends_on:
       - sensor-service
+      - db
     restart: always
 
   frontend-service:
@@ -44,3 +64,6 @@ services:
     depends_on:
       - backend-service
     restart: always
+
+volumes:
+  db_data:
