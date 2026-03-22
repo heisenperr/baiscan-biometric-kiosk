@@ -30,12 +30,20 @@ sleep 1
 echo "Launching splash screen..."
 
 # Determine the absolute path to the HTML splash screen
-# We check the directory of this script, and then the parent just in case.
+# We check the directory of this script, then the current path, then the parent.
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+CURR_DIR="$(pwd)"
+
+echo "Debugging path detection:"
+echo "  Script Path: $SCRIPT_PATH"
+echo "  Script Dir:  $SCRIPT_DIR"
+echo "  Current Dir: $CURR_DIR"
 
 if [ -f "$SCRIPT_DIR/start-kiosk.html" ]; then
     ABS_SPLASH_PATH="$SCRIPT_DIR/start-kiosk.html"
+elif [ -f "$CURR_DIR/start-kiosk.html" ]; then
+    ABS_SPLASH_PATH="$CURR_DIR/start-kiosk.html"
 elif [ -f "$SCRIPT_DIR/../start-kiosk.html" ]; then
     ABS_SPLASH_PATH="$(readlink -f "$SCRIPT_DIR/../start-kiosk.html")"
 else
@@ -44,9 +52,10 @@ fi
 
 if [ -n "$ABS_SPLASH_PATH" ]; then
     SPLASH_URL="file://$ABS_SPLASH_PATH"
-    echo "Found splash screen at: $SPLASH_URL"
+    echo "SUCCESS: Found splash screen at: $SPLASH_URL"
 else
-    echo "WARNING: Splash screen file not found. Falling back to default URL check."
+    echo "WARNING: Splash screen file 'start-kiosk.html' NOT FOUND anywhere."
+    echo "Falling back to the main app URL: $URL"
     SPLASH_URL="$URL"
 fi
 
