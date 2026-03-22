@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# 1. Configuration & Global Pathing
+# 1. Configuration & Path Detection
 clear
 echo "Initializing Kiosk System..."
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 export DISPLAY=:0
 
-# Detect the correct Chromium binary for the system
+# Detect binary
 CHROME_BIN=$(which chromium || which chromium-browser || echo "chromium")
 
-# Move to the project root
+# Move to project root
 cd "$SCRIPT_DIR/.." || cd "$SCRIPT_DIR"
 
 # 2. Network & IP Detection
@@ -23,13 +23,14 @@ echo "Detected IP: $ALLOWED_HOST"
 echo "Target URL:  $URL"
 echo "------------------------------------------"
 
-# 3. Kiosk Profile Management
-# Using a single profile allows the browser to re-navigate the existing window smoothly.
-KIOSK_PROFILE="/tmp/kiosk-session-profile"
+# 3. Memory & Resource Hardening
+# Avoid /tmp (RAM-based) for profiles. We use a disk-based folder to save RAM.
+SPLASH_PROFILE="$SCRIPT_DIR/.splash-profile"
 
-echo "Cleaning stale browser sessions..."
-pkill -f "$CHROME_BIN" &> /dev/null || true
-rm -rf "$KIOSK_PROFILE" &> /dev/null
+echo "Releasing stale memory..."
+pkill -9 -f chromium &> /dev/null || true
+pkill -9 -f chromium-browser &> /dev/null || true
+rm -rf "$SPLASH_PROFILE" &> /dev/null
 sleep 1
 
 # 4. Splash Screen Path Detection
@@ -47,13 +48,15 @@ else
     SPLASH_URL="$URL"
 fi
 
-# 5. Initial Launch (Splash Screen)
-# Added --background-color and profile reuse for zero-flicker performance
-echo "Launching splash screen..."
+# 5. Launch Splash (Low-RAM Strategy)
+# disk-cache-size and media-cache-size are set to minimal to prevent RAM bloat.
+echo "Starting low-resource splash..."
 "$CHROME_BIN" \
   --kiosk \
-  --user-data-dir="$KIOSK_PROFILE" \
+  --user-data-dir="$SPLASH_PROFILE" \
   --background-color='#000000' \
+  --disk-cache-size=1048576 \
+  --media-cache-size=1048576 \
   --no-first-run \
   --noerrdialogs \
   --disable-infobars \
@@ -65,11 +68,11 @@ echo "Launching splash screen..."
   --overscroll-history-navigation=0 \
   "$SPLASH_URL" &
 
-# Wait for the browser to render
+# Wait for visuals to render
 sleep 4
 
 # 6. Container Lifecycle
-echo "Managing system containers..."
+echo "Restoring system containers..."
 docker compose down --remove-orphans &> /dev/null
 rm -rf frontend-service/.next
 
@@ -81,7 +84,7 @@ echo "Warming up services..."
 while true; do
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
     if [ "$STATUS" = "200" ]; then
-        echo "Frontend is ready. Navigating live..."
+        echo "Frontend is ready. Finalizing transition..."
         break
     else
         sleep 2
@@ -89,12 +92,26 @@ while true; do
 done
 
 # 8. Seamless Handover
-# By re-using the KIOSK_PROFILE, Chromium will navigate the EXISTING window
-# rather than opening a new one, eliminating window manager flicker.
+# Launch main app in default profile. One window covers the other.
 "$CHROME_BIN" \
   --kiosk \
-  --user-data-dir="$KIOSK_PROFILE" \
   --background-color='#000000' \
+  --disk-cache-size=1048576 \
+  --media-cache-size=1048576 \
+  --no-first-run \
+  --noerrdialogs \
+  --disable-infobars \
+  --disable-session-crashed-bubble \
+  --password-store=basic \
+  --incognito \
   "$URL" &
 
-echo "Kiosk is active. Enjoy!"
+# Allow time for initial rendering
+sleep 5
+
+# 9. Resource Release
+# Kill the splash screen process tree entirely.
+# This prevents background tabs from eating memory.
+pkill -9 -f "$SPLASH_PROFILE" &> /dev/null
+
+echo "Kiosk is active. Memory optimization complete."
