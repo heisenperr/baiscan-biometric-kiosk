@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# 1. Configuration & Initial Cleanup
-# Clear the terminal buffer to prevent any flashing before Chromium covers it
+# 1. Configuration & Global Pathing
 clear
 echo "Initializing Kiosk System..."
 SCRIPT_PATH="$(readlink -f "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 export DISPLAY=:0
 
-# Move to the project root (assumed to be one level up from the kiosk/ folder)
+# Detect the correct Chromium binary for the system
+CHROME_BIN=$(which chromium || which chromium-browser || echo "chromium")
+
+# Move to the project root
 cd "$SCRIPT_DIR/.." || cd "$SCRIPT_DIR"
 
 # 2. Network & IP Detection
@@ -21,17 +23,16 @@ echo "Detected IP: $ALLOWED_HOST"
 echo "Target URL:  $URL"
 echo "------------------------------------------"
 
-# 3. Isolated Splash Launch
-# We use a temporary profile for the splash screen so we can control it independently
-# without affecting the main application window.
-SPLASH_PROFILE="/tmp/kiosk-splash-profile"
+# 3. Kiosk Profile Management
+# Using a single profile allows the browser to re-navigate the existing window smoothly.
+KIOSK_PROFILE="/tmp/kiosk-session-profile"
 
 echo "Cleaning stale browser sessions..."
-pkill -f chromium &> /dev/null || true
-rm -rf "$SPLASH_PROFILE" &> /dev/null
+pkill -f "$CHROME_BIN" &> /dev/null || true
+rm -rf "$KIOSK_PROFILE" &> /dev/null
 sleep 1
 
-# Detect Splash Screen Path
+# 4. Splash Screen Path Detection
 if [ -f "kiosk/start-kiosk.html" ]; then
     ABS_SPLASH_PATH="$(readlink -f "kiosk/start-kiosk.html")"
 elif [ -f "start-kiosk.html" ]; then
@@ -46,12 +47,13 @@ else
     SPLASH_URL="$URL"
 fi
 
-# 4. Immediate Visual Coverage
-# Launch the splash screen instantly. It stays on top throughout the Docker boot.
-echo "Launching splash screen (isolated)..."
-chromium \
-  --kiosk "$SPLASH_URL" \
-  --user-data-dir="$SPLASH_PROFILE" \
+# 5. Initial Launch (Splash Screen)
+# Added --background-color and profile reuse for zero-flicker performance
+echo "Launching splash screen..."
+"$CHROME_BIN" \
+  --kiosk \
+  --user-data-dir="$KIOSK_PROFILE" \
+  --background-color='#000000' \
   --no-first-run \
   --noerrdialogs \
   --disable-infobars \
@@ -60,12 +62,13 @@ chromium \
   --incognito \
   --allow-file-access-from-files \
   --disable-pinch \
-  --overscroll-history-navigation=0 &
+  --overscroll-history-navigation=0 \
+  "$SPLASH_URL" &
 
-# Let the splash screen render its first frame and GIFs before the CPU work starts
+# Wait for the browser to render
 sleep 4
 
-# 5. Background Container Management
+# 6. Container Lifecycle
 echo "Managing system containers..."
 docker compose down --remove-orphans &> /dev/null
 rm -rf frontend-service/.next
@@ -73,36 +76,25 @@ rm -rf frontend-service/.next
 echo "Starting system services..."
 docker compose up -d &> /dev/null
 
-# 6. Smooth Handover Check
-# We wait for the live app to respond before launching the final window
+# 7. Transition Health Check
 echo "Warming up services..."
 while true; do
     STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
     if [ "$STATUS" = "200" ]; then
-        echo "Frontend is ready. Finalizing transition..."
+        echo "Frontend is ready. Navigating live..."
         break
     else
         sleep 2
     fi
 done
 
-# 7. Seamless Window Switch
-# Launch the REAL app (default profile). This window covers the splash screen instantly.
-chromium \
-  --kiosk "$URL" \
-  --no-first-run \
-  --noerrdialogs \
-  --disable-infobars \
-  --disable-session-crashed-bubble \
-  --password-store=basic \
-  --incognito \
-  --disable-pinch \
-  --overscroll-history-navigation=0 &
-
-# Give the main app enough time to load its CSS and images before closing the splash
-sleep 5
-
-# SILENTLY kill the isolated splash screen process in the background.
-pkill -f "$SPLASH_PROFILE" &> /dev/null
+# 8. Seamless Handover
+# By re-using the KIOSK_PROFILE, Chromium will navigate the EXISTING window
+# rather than opening a new one, eliminating window manager flicker.
+"$CHROME_BIN" \
+  --kiosk \
+  --user-data-dir="$KIOSK_PROFILE" \
+  --background-color='#000000' \
+  "$URL" &
 
 echo "Kiosk is active. Enjoy!"
