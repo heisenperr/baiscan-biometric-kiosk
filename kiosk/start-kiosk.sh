@@ -77,7 +77,7 @@ echo "Restoring system services (preserving build)..."
 # !!! IMPORTANT: We NO LONGER delete the .next folder. 
 # Recompiling Next.js on a 2GB Pi 5 will freeze the system.
 docker compose down --remove-orphans
-docker compose up -d
+docker compose up -d --build
 
 # Let the Pi's CPU settle after container startup before polling
 sleep 15
