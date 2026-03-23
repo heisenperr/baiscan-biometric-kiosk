@@ -4,8 +4,10 @@ const isServer = typeof window === 'undefined';
 export const CLIENT_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
 export const BACKEND_API_URL = process.env.BACKEND_URL || '';
 
-// For WebSockets, we need the full URL. No hardcoded ports.
-export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || '';
+// For WebSockets, we need the full URL dynamically based on the current hostname to avoid build-time baking issues.
+export const SOCKET_URL = typeof window !== 'undefined' 
+    ? `http://${window.location.hostname}:3001` 
+    : (process.env.NEXT_PUBLIC_SOCKET_URL || '');
 
 // For the client, we want a relative path to hit our Next.js API routes (the proxy)
 const API_URL = isServer ? BACKEND_API_URL : ''; 
