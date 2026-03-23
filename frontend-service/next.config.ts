@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   // Uses the IP passed from your script, or defaults to localhost
   allowedDevOrigins: [
     'localhost',

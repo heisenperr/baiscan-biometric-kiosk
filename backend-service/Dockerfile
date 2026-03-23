@@ -1,17 +1,34 @@
-FROM node:20-alpine
+# 1. Build stage
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy all source files
 COPY . .
-
-# Build once to ensure dist exists, but CMD will run dev
 RUN npm run build
+
+# Remove development dependencies
+RUN npm prune --production
+
+# 2. Runtime stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy package.json to identify app
+COPY --from=builder /app/package.json ./package.json
+# Copy pruned node_modules
+COPY --from=builder /app/node_modules ./node_modules
+# Copy built dist
+COPY --from=builder /app/dist ./dist
+
+# Copy any other required runtime files (e.g. scripts, templates)
+# COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 3001
 
-# Default to production, but compose can override to 'npm run dev'
-CMD ["npm", "start"]
+CMD ["node", "dist/server.js"]

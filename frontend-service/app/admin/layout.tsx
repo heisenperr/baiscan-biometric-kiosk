@@ -44,16 +44,16 @@ export default function AdminLayout({
     <div className="min-h-screen bg-[#FDFDFE] flex antialiased selection:bg-blue-50 selection:text-blue-600">
       {/* Sidebar with collapse state */}
       <AdminSidebar isCollapsed={isCollapsed} />
-      
+
       {/* Main Content Area */}
       <main className={`flex-grow transition-all duration-500 ease-in-out ${isCollapsed ? 'pl-24' : 'pl-72'}`}>
-        
+
         {/* Top Header Section - Inheriting Quicksand globally */}
         <header className="h-24 flex items-center justify-between px-10 sticky top-0 z-20 bg-[#FDFDFE]/90 backdrop-blur-md">
-          
+
           {/* Left: Minimalist Breadcrumbs & Toggle */}
           <div className="flex items-center space-x-8">
-            <button 
+            <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="p-2.5 text-slate-400 hover:text-slate-900 transition-all hover:bg-slate-50 rounded-xl active:scale-95"
               title={isCollapsed ? "Expand Sidebar" : "Minimize Sidebar"}
@@ -70,17 +70,17 @@ export default function AdminLayout({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </Link>
-              
+
               <span className="text-slate-200 select-none pb-0.5 opacity-60 font-medium">/</span>
 
               <div className="flex items-center">
                 {breadcrumbs.map((crumb, idx) => (
                   <React.Fragment key={crumb.href}>
-                    <Link 
-                      href={crumb.href} 
+                    <Link
+                      href={crumb.href}
                       className={`px-3.5 py-2 transition-all tracking-tight rounded-xl
-                        ${idx === breadcrumbs.length - 1 
-                          ? 'text-slate-900 font-bold' 
+                        ${idx === breadcrumbs.length - 1
+                          ? 'text-slate-900 font-bold'
                           : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-bold'
                         }`}
                     >
@@ -94,7 +94,7 @@ export default function AdminLayout({
               </div>
             </nav>
           </div>
-          
+
           {/* Right: Modern Search Bar */}
           <div className="flex items-center space-x-6">
             <div className="relative group">

@@ -6,8 +6,8 @@ import PageHeader from "@/components/PageHeader";
 export default function AdminDashboard() {
   return (
     <div className="space-y-10">
-      <PageHeader 
-        title="Welcome to Dashboard" 
+      <PageHeader
+        title="Welcome to Dashboard"
         subtitle="Under Construction Page"
       />
 

@@ -1,12 +1,9 @@
-import { AppDataSource } from "../data-source";
+import { DataSource } from "typeorm";
 import { User } from "../entity/User";
 
-const seedAdmin = async () => {
+export const seedAdmin = async (dataSource: DataSource) => {
     try {
-        await AppDataSource.initialize();
-        console.log("[SEED] Data Source has been initialized!");
-
-        const userRepository = AppDataSource.getRepository(User);
+        const userRepository = dataSource.getRepository(User);
 
         // Check if admin already exists
         const adminEmail = "admin@baiscan.com";
@@ -30,12 +27,7 @@ const seedAdmin = async () => {
             console.log(`[SEED] Email: ${adminEmail}`);
             console.log(`[SEED] Password: admin123`);
         }
-
-        await AppDataSource.destroy();
     } catch (error) {
         console.error("[SEED] Error during seeding:", error);
-        process.exit(1);
     }
 };
-
-seedAdmin();
