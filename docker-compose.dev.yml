@@ -2,6 +2,7 @@ services:
   sensor-service:
     build:
       context: ./sensor-service
+      dockerfile: ../docker/sensor.Dockerfile
     container_name: baiscan_sensor_dev
     privileged: true
     volumes:
@@ -44,6 +45,9 @@ services:
     restart: always
 
   backend-service:
+    build:
+      context: ./backend-service
+      dockerfile: ../docker/backend.Dockerfile
     image: node:20-alpine
     container_name: baiscan_backend_dev
     working_dir: /app
@@ -68,6 +72,9 @@ services:
     restart: always
 
   frontend-service:
+    build:
+      context: ./frontend-service
+      dockerfile: ../docker/frontend.Dockerfile
     image: node:20-alpine
     container_name: baiscan_frontend_dev
     working_dir: /app
