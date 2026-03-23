@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import Dashboard from "@/components/Dashboard";
-import { useAuth } from "@/context/AuthContext";
-import LoadingScreen from "@/components/LoadingScreen";
+import Dashboard from "../components/Dashboard";
+import { useAuth } from "../context/AuthContext";
+import LoadingScreen from "../components/LoadingScreen";
 
 export default function Home() {
   const { isLoading } = useAuth();

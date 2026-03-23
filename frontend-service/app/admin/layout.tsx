@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import AdminSidebar from "@/components/AdminSidebar";
+import AdminSidebar from "../../components/AdminSidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
-import LoadingScreen from "@/components/LoadingScreen";
+import LoadingScreen from "../../components/LoadingScreen";
 
 export default function AdminLayout({
   children,
