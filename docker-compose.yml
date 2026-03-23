@@ -62,7 +62,6 @@ services:
       - DB_USER=${MYSQL_USER:-baiscan_user}
       - DB_PASSWORD=${MYSQL_PASSWORD:-baiscan_password}
       - DB_NAME=${MYSQL_DATABASE:-baiscan_db}
-    # Removed volume mount for source code to use optimized production build
     depends_on:
       sensor-service:
         condition: service_started
@@ -84,8 +83,8 @@ services:
     environment:
       - NEXT_TELEMETRY_DISABLED=1
       - ALLOWED_HOST=${ALLOWED_HOST:-localhost}
-      - NEXT_PUBLIC_BACKEND_URL=http://${ALLOWED_HOST:-localhost}:3001
-    # Removed volume mount for source code to use optimized production build
+      - BACKEND_URL=http://${ALLOWED_HOST:-localhost}
+      - NEXT_PUBLIC_BACKEND_URL=http://${ALLOWED_HOST:-localhost}/api
     depends_on:
       - backend-service
     deploy:

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import { authService } from '@/lib/api/auth';
 import { UserSchema, UserProfile } from '@/lib/schemas';
 
 interface AuthContextType {
@@ -30,8 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (storedToken) {
           // We have a token, just fetch profile
-          const response = await api.get('/api/auth/me');
-          const { user: userData } = response.data;
+          const { user: userData } = await authService.getMe();
           setUser(UserSchema.parse(userData));
           setAccessToken(storedToken);
         } else {
@@ -40,8 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           if (hasSessionCookie) {
             // No access token but we have a session cookie, try to refresh once
-            const response = await api.post('/api/auth/refresh');
-            const { accessToken: newToken, user: userData } = response.data;
+            const { accessToken: newToken, user: userData } = await authService.refresh();
             
             setUser(UserSchema.parse(userData));
             setAccessToken(newToken);
@@ -74,8 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Keep this for manual refreshes if needed, but it's now mostly redundant 
     // as the initAuth and interceptors handle everything.
     try {
-      const response = await api.get('/api/auth/me');
-      setUser(UserSchema.parse(response.data.user));
+      const { user: userData } = await authService.getMe();
+      setUser(UserSchema.parse(userData));
     } catch (error) {
       setUser(null);
       setAccessToken(null);
@@ -85,8 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post('/api/auth/login', { email, password });
-      const { accessToken: newToken, user: userData } = response.data;
+      const { accessToken: newToken, user: userData } = await authService.login({ email, password });
 
       // Rigorous validation of server response
       const validatedUser = UserSchema.parse(userData);
@@ -107,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post('/api/auth/logout');
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

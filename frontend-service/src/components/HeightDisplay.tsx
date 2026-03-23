@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import Image from "next/image";
+import { SOCKET_URL } from "@/lib/api";
 
 interface HeightData {
   sensor: string;
@@ -26,19 +27,16 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
   }, [isActive]);
 
   useEffect(() => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ||
-      `http://${window.location.hostname}:3001`;
+    console.log(`[SOCKET] Connecting to backend...`);
 
-    console.log(`[SOCKET] Connecting to backend at: ${backendUrl}`);
-
-    const socket = io(backendUrl, {
+    const socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
-      reconnectionAttempts: 5
+      reconnectionAttempts: Number(process.env.NEXT_PUBLIC_SOCKET_RECONNECT_ATTEMPTS || 5)
     });
 
     socketRef.current = socket;
 
-    socket.on("sensor:height", (data: HeightData) => {
+    socket.on(process.env.NEXT_PUBLIC_SENSOR_EVENT_NAME || "sensor:height", (data: HeightData) => {
       if (isActiveRef.current) {
         setHeight(data.value);
       }

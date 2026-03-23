@@ -87,7 +87,11 @@ services:
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
       - ALLOWED_HOST=${ALLOWED_HOST:-localhost}
-      - NEXT_PUBLIC_BACKEND_URL=http://${ALLOWED_HOST:-localhost}:3001
+      - BACKEND_URL=http://backend-service:3001
+      - NEXT_PUBLIC_BACKEND_URL=/api
+      - NEXT_PUBLIC_SOCKET_URL=http://${ALLOWED_HOST:-localhost}:3001
+      - NEXT_PUBLIC_SOCKET_RECONNECT_ATTEMPTS=5
+      - NEXT_PUBLIC_SENSOR_EVENT_NAME=sensor:height
     command: sh -c "npm install && npm run dev -- -p 80"
     depends_on:
       - backend-service

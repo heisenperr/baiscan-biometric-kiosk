@@ -1,10 +1,17 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL!;
+const isServer = typeof window === 'undefined';
+export const CLIENT_API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+export const BACKEND_API_URL = process.env.BACKEND_URL || '';
+
+// For WebSockets, we need the full URL. No hardcoded ports.
+export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || '';
+
+const API_URL = isServer ? BACKEND_API_URL : CLIENT_API_URL;
 
 const api = axios.create({
     baseURL: API_URL,
-    withCredentials: true, // Required for HttpOnly cookies (refresh token)
+    withCredentials: true,
 });
 
 // Flag to prevent multiple refresh calls
@@ -41,7 +48,7 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         // If 401 occurs and it's not a retry already, and NOT the refresh endpoint itself
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/api/auth/refresh')) {
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('auth/refresh')) {
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -58,7 +65,7 @@ api.interceptors.response.use(
 
             try {
                 // Attempt to refresh the token
-                const response = await axios.post(`${API_URL}/api/auth/refresh`, {}, { withCredentials: true });
+                const response = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
                 const { accessToken } = response.data;
 
                 if (typeof window !== 'undefined') {
