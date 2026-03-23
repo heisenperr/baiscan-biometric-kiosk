@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '../lib/api';
-import { UserSchema, UserProfile } from '../lib/schemas';
+import api from '@/lib/api';
+import { UserSchema, UserProfile } from '@/lib/schemas';
 
 interface AuthContextType {
   user: UserProfile | null;

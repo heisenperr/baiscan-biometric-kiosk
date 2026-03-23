@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -9,6 +10,10 @@ const nextConfig: NextConfig = {
     process.env.ALLOWED_HOST || '',
     `${process.env.ALLOWED_HOST}:80`
   ].filter(Boolean),
+  webpack: (config) => {
+    config.resolve.alias['@'] = path.resolve(__dirname);
+    return config;
+  },
 };
 
 export default nextConfig;

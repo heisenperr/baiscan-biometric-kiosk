@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { LoginSchema } from "../../lib/schemas";
-import LoadingScreen from "../../components/LoadingScreen";
+import { LoginSchema } from "@/lib/schemas";
+import LoadingScreen from "@/components/LoadingScreen";
 import { z } from "zod";
 
 export default function LoginPage() {

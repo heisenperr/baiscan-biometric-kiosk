@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import HeightDisplay from "../../../components/HeightDisplay";
+import HeightDisplay from "@/components/HeightDisplay";
 
 export default function HeightPage() {
   const router = useRouter();
