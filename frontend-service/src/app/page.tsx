@@ -4,6 +4,7 @@ import React from "react";
 import Dashboard from "@/components/Dashboard";
 import { useAuth } from "@/context/AuthContext";
 import LoadingScreen from "@/components/LoadingScreen";
+import LiveNotification from "@/components/LiveNotification";
 
 export default function Home() {
   const { isLoading } = useAuth();
@@ -19,6 +20,7 @@ export default function Home() {
 
   return (
     <main className="flex h-screen flex-col items-center relative bg-slate-50 overflow-hidden py-4 px-6 md:px-12">
+      <LiveNotification />
       {/* Mesh Gradient Background Layer */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[120px]"></div>

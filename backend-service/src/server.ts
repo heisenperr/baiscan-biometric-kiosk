@@ -7,6 +7,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import sensorRoutes from './routes/sensorRoutes';
 import authRoutes from './routes/authRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import sensorService from './services/sensorService';
 import { AppDataSource } from './data-source';
 import { seedAdmin } from './seeds/adminSeeder';
@@ -43,8 +44,11 @@ app.get('/', (req: Request, res: Response) => {
 // Modular Routes
 app.use('/sensor', sensorRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/notification', notificationRoutes);
 
 // Socket.IO
+app.set('io', io); // Make 'io' accessible to controllers
+
 io.on('connection', (socket) => {
   console.log('[SOCKET] Client connected:', socket.id);
 
