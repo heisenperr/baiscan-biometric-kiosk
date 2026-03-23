@@ -1,25 +1,19 @@
 "use client";
 
 import React from "react";
-import Dashboard from "@/components/Dashboard";
-import { useAuth } from "@/context/AuthContext";
-import LoadingScreen from "@/components/LoadingScreen";
+import { useRouter } from "next/navigation";
+import HeightDisplay from "@/components/HeightDisplay";
 
-export default function Home() {
-  const { isLoading } = useAuth();
+export default function HeightPage() {
+  const router = useRouter();
 
-  if (isLoading) {
-    return <LoadingScreen message="Initializing..." />;
-  }
-
-  const handleSelectModule = (id: string) => {
-    console.log(`Module selected: ${id}`);
-    // Other modules can be handled here if they aren't routed yet
+  const handleBack = () => {
+    router.push("/");
   };
 
   return (
     <main className="flex h-screen flex-col items-center relative bg-slate-50 overflow-hidden py-4 px-6 md:px-12">
-      {/* Mesh Gradient Background Layer */}
+      {/* Mesh Gradient Background Layer (Same as Root) */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100 rounded-full blur-[120px]"></div>
@@ -45,33 +39,13 @@ export default function Home() {
             </p>
           </div>
         </div>
-
-        <div className="flex flex-col items-end">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em] leading-none mb-1">
-            Kiosk Terminal
-          </p>
-          <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-widest leading-none hidden sm:block">
-            Precision Biometrics Active
-          </p>
-        </div>
       </header>
 
       <section className="w-full flex-grow flex items-center justify-center overflow-hidden relative z-10">
-        <Dashboard onSelectModule={handleSelectModule} />
-      </section>
-
-      {/* Ultra Slim Premium Footer */}
-      <footer className="w-full flex-shrink-0 flex justify-between items-center mt-2 pt-2 border-t border-slate-200/50 relative z-20">
-        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-[0.3em] opacity-60">
-          &copy; 2026 BaiScan Biometrics • Professional Series
-        </p>
-        <div className="flex space-x-6 text-[8px] text-slate-400 font-bold uppercase tracking-widest">
-          <span className="flex items-center space-x-1.5">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-sm shadow-blue-400"></span>
-            <span>v0.0.1 Online</span>
-          </span>
+        <div className="w-full">
+          <HeightDisplay isActive={true} onBack={handleBack} />
         </div>
-      </footer>
+      </section>
     </main>
   );
 }

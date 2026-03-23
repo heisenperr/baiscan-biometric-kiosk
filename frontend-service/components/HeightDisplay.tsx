@@ -66,11 +66,11 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
       {/* Compact Back Button - High End Style */}
       <button
         onClick={onBack}
-        className="self-start mb-4 text-slate-400 hover:text-blue-600 transition-all flex items-center space-x-2 font-black uppercase tracking-[0.2em] text-[10px] group active:scale-95"
+        className="self-start mb-4 text-slate-400 hover:text-blue-600 transition-all flex items-center space-x-2 font-bold uppercase tracking-[0.25em] text-[10px] group active:scale-95"
       >
         <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center transition-all group-hover:border-blue-200 group-hover:shadow-md">
           <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </div>
         <span className="opacity-60 group-hover:opacity-100">Cancel Scan</span>
@@ -87,12 +87,12 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
 
             <div className="text-center relative z-10">
-              <span className="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter tabular-nums leading-none">
+              <span className="text-7xl md:text-8xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
                 {height !== null ? Math.round(height) : "--"}
               </span>
               <div className="flex items-center justify-center space-x-2 mt-1">
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span>
-                <span className="text-sm font-black text-blue-600 uppercase tracking-widest opacity-70">
+                <span className="text-sm font-bold text-blue-600 uppercase tracking-widest opacity-80">
                   mm
                 </span>
               </div>

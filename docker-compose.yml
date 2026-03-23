@@ -2,6 +2,7 @@ services:
   sensor-service:
     build:
       context: ./sensor-service
+    container_name: baiscan_sensor
     privileged: true
     volumes:
       - /dev:/dev
@@ -14,7 +15,7 @@ services:
 
   db:
     image: mysql:8.0
-    # performance-schema=OFF is crucial for saving RAM on a 2GB Raspberry Pi
+    container_name: baiscan_db
     command: --default-authentication-plugin=mysql_native_password --performance-schema=OFF
     ports:
       - "3306:3306"
@@ -30,11 +31,11 @@ services:
   backend-service:
     build:
       context: ./backend-service
+    container_name: baiscan_backend
     ports:
       - "3001:3001"
     volumes:
       - ./backend-service:/app
-      - /app/node_modules
     environment:
       - PORT=3001
       - SENSOR_SERVICE_URL=http://sensor-service:8000
@@ -42,7 +43,7 @@ services:
       - DB_USER=${MYSQL_USER:-baiscan_user}
       - DB_PASSWORD=${MYSQL_PASSWORD:-baiscan_password}
       - DB_NAME=${MYSQL_DATABASE:-baiscan_db}
-    command: npm run dev
+    command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run dev"
     depends_on:
       - sensor-service
       - db
@@ -51,17 +52,17 @@ services:
   frontend-service:
     build:
       context: ./frontend-service
+    container_name: baiscan_frontend
     ports:
       - "80:80"
     volumes:
       - ./frontend-service:/app
-      - /app/node_modules
-      - /app/.next
     environment:
       - WATCHPACK_POLLING=true
       - NEXT_TELEMETRY_DISABLED=1
       - ALLOWED_HOST=${ALLOWED_HOST:-localhost}
       - NEXT_PUBLIC_BACKEND_URL=http://${ALLOWED_HOST:-localhost}:3001
+    command: sh -c "if [ ! -d node_modules ]; then npm install; fi && npm run dev -- -p 80"
     depends_on:
       - backend-service
     restart: always

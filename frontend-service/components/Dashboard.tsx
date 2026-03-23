@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface ModuleCard {
   id: string;
@@ -14,6 +15,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onSelectModule }: DashboardProps) {
+  const router = useRouter();
   const modules: ModuleCard[] = [
     {
       id: "height",
@@ -73,7 +75,15 @@ export default function Dashboard({ onSelectModule }: DashboardProps) {
         {modules.map((module) => (
           <button
             key={module.id}
-            onClick={() => module.isReady && onSelectModule(module.id)}
+            onClick={() => {
+              if (module.isReady) {
+                if (module.id === 'height') {
+                  router.push('/vl53l0x/height');
+                } else {
+                  onSelectModule(module.id);
+                }
+              }
+            }}
             disabled={!module.isReady}
             className={`
               relative group p-4 md:p-6 rounded-[2rem] border transition-all duration-500 text-left w-36 md:w-44
@@ -97,15 +107,12 @@ export default function Dashboard({ onSelectModule }: DashboardProps) {
             </div>
 
             <div className="relative z-10 space-y-1">
-              <h3 className={`text-md md:text-xl font-black tracking-tight ${module.isReady ? 'text-slate-900 leading-none' : 'text-slate-400'}`}>
+              <h3 className={`text-md md:text-lg font-bold tracking-tight ${module.isReady ? 'text-slate-900 leading-none' : 'text-slate-400'}`}>
                 {module.name}
               </h3>
-              <div className="flex items-center space-x-1">
-                 <div className={`w-1 h-1 rounded-full ${module.isReady ? 'bg-blue-500 animate-pulse' : 'bg-slate-300'}`}></div>
-                 <p className={`text-[8px] font-black uppercase tracking-widest ${module.isReady ? 'text-blue-600' : 'text-slate-300'}`}>
-                   {module.isReady ? "Ready" : "Offline"}
-                 </p>
-              </div>
+              <p className={`text-[9px] font-bold uppercase tracking-widest ${module.isReady ? 'text-blue-500/70' : 'text-slate-300'}`}>
+                {module.isReady ? 'Ready Scan' : 'Coming Soon'}
+              </p>
             </div>
           </button>
         ))}
