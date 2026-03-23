@@ -83,8 +83,9 @@ services:
     environment:
       - NEXT_TELEMETRY_DISABLED=1
       - ALLOWED_HOST=${ALLOWED_HOST:-localhost}
-      - BACKEND_URL=http://${ALLOWED_HOST:-localhost}
-      - NEXT_PUBLIC_BACKEND_URL=http://${ALLOWED_HOST:-localhost}/api
+      - BACKEND_URL=http://backend-service:3001
+      - NEXT_PUBLIC_BACKEND_URL=/api
+      - NEXT_PUBLIC_SOCKET_URL=http://${ALLOWED_HOST:-localhost}:3001
     depends_on:
       - backend-service
     deploy:
