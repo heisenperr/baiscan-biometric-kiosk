@@ -4,6 +4,7 @@ interface NotificationPayload {
     message: string;
     type?: 'info' | 'success' | 'warning' | 'error';
     duration?: number;
+    gifName?: string;
 }
 
 const notificationService = {

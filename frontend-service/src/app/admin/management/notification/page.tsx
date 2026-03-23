@@ -7,6 +7,7 @@ export default function NotificationManagementPage() {
     const [message, setMessage] = useState('');
     const [type, setType] = useState<'info' | 'success' | 'warning' | 'error'>('info');
     const [duration, setDuration] = useState(8);
+    const [gifName, setGifName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [status, setStatus] = useState<{ text: string, error: boolean } | null>(null);
 
@@ -25,7 +26,8 @@ export default function NotificationManagementPage() {
             await notificationService.send({
                 message: message.trim(),
                 type,
-                duration: duration * 1000 // Convert to ms
+                duration: duration * 1000, // Convert to ms
+                gifName: gifName || undefined
             });
             setStatus({ text: 'Notification broadcasted successfully!', error: false });
             setMessage('');
@@ -74,19 +76,19 @@ export default function NotificationManagementPage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Type Selection */}
-                        <div>
+                        <div className="md:col-span-1">
                             <label className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
                                 Alert Type
                             </label>
-                            <div className="flex space-x-2 mt-2">
+                            <div className="flex flex-col space-y-2 mt-2">
                                 {(['info', 'success', 'warning', 'error'] as const).map((t) => (
                                     <button
                                         key={t}
                                         type="button"
                                         onClick={() => setType(t)}
-                                        className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${
+                                        className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${
                                             type === t 
                                                 ? t === 'info' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500' :
                                                   t === 'success' ? 'bg-emerald-50 border-emerald-500 text-emerald-700 ring-1 ring-emerald-500' :
@@ -101,20 +103,43 @@ export default function NotificationManagementPage() {
                             </div>
                         </div>
 
-                        {/* Duration Selection */}
-                        <div>
-                            <label htmlFor="duration" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
-                                Display Duration (Seconds)
-                            </label>
-                            <input
-                                type="number"
-                                id="duration"
-                                min="3"
-                                max="60"
-                                value={duration}
-                                onChange={(e) => setDuration(parseInt(e.target.value))}
-                                className="block w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-slate-50"
-                            />
+                        <div className="md:col-span-2 space-y-8">
+                            {/* Duration Selection */}
+                            <div>
+                                <label htmlFor="duration" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                    Display Duration (Seconds)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="duration"
+                                    min="3"
+                                    max="60"
+                                    value={duration}
+                                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                                    className="block w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-slate-50"
+                                />
+                            </div>
+
+                            {/* GIF Selection */}
+                            <div>
+                                <label htmlFor="gif" className="block text-sm font-bold text-slate-700 uppercase tracking-wider mb-2">
+                                    Include Animated GIF
+                                </label>
+                                <select
+                                    id="gif"
+                                    value={gifName}
+                                    onChange={(e) => setGifName(e.target.value)}
+                                    className="block w-full rounded-xl border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-3 bg-slate-50"
+                                >
+                                    <option value="">No GIF (Text Only)</option>
+                                    <option value="shocked.gif">Shocked (Standard)</option>
+                                    <option value="shocked-gif-1.gif">Shocked Alternative 1</option>
+                                    <option value="shocked-gif-2.gif">Shocked Alternative 2</option>
+                                </select>
+                                <p className="mt-2 text-xs text-slate-500">
+                                    Attaches an animated reaction GIF to the right side of the notification on the kiosk.
+                                </p>
+                            </div>
                         </div>
                     </div>
 

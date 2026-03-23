@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 export const sendNotification = (req: Request, res: Response): void => {
     try {
-        const { message, type = 'info', duration = 8000 } = req.body;
+        const { message, type = 'info', duration = 8000, gifName = null } = req.body;
 
         if (!message) {
             res.status(400).json({ message: 'Message is required' });
@@ -23,6 +23,7 @@ export const sendNotification = (req: Request, res: Response): void => {
             message,
             type, // 'info', 'success', 'warning', 'error'
             duration,
+            gifName,
             timestamp: new Date().toISOString()
         });
 
