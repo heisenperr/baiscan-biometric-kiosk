@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
-import { authService } from '@/lib/api/auth';
+import authService from '@/lib/api/auth';
 import { UserSchema, UserProfile } from '@/lib/schemas';
 
 interface AuthContextType {
@@ -17,41 +17,67 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ 
+  children, 
+  initialHasSession = false 
+}: { 
+  children: ReactNode; 
+  initialHasSession?: boolean;
+}) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(initialHasSession);
   const router = useRouter();
 
   // Initialize Auth from HttpOnly cookie or LocalStorage
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-      
+
       try {
         if (storedToken) {
           // We have a token, just fetch profile
-          const { user: userData } = await authService.getMe();
-          setUser(UserSchema.parse(userData));
-          setAccessToken(storedToken);
-        } else {
-          // Check for canary cookie before attempting refresh to avoid unnecessary 401 calls
-          const hasSessionCookie = typeof document !== 'undefined' && document.cookie.includes('sb-has-session=true');
-          
-          if (hasSessionCookie) {
-            // No access token but we have a session cookie, try to refresh once
-            const { accessToken: newToken, user: userData } = await authService.refresh();
-            
-            setUser(UserSchema.parse(userData));
-            setAccessToken(newToken);
-            localStorage.setItem('accessToken', newToken);
-          } else {
-            // No token and no session cookie, just stop
+          // With API routes, the interceptor handles the Authorization header
+          const result = await authService.getMe();
+          if (result.user) {
+            setUser(UserSchema.parse(result.user));
+            setAccessToken(storedToken);
             setIsLoading(false);
+            return;
           }
         }
+        // If profile fetch fails, token might be expired, proceed to attempt refresh
+
+        // Check for canary cookie before attempting refresh
+        const hasSessionCookie = typeof document !== 'undefined' && document.cookie.includes('sb-has-session=true');
+
+        if (hasSessionCookie) {
+          try {
+            const result = await authService.refresh();
+            if (result.accessToken && result.user) {
+              const { accessToken: newToken, user: userData } = result;
+              setUser(UserSchema.parse(userData));
+              setAccessToken(newToken);
+              localStorage.setItem('accessToken', newToken);
+            } else {
+              // Refresh failed, clear everything
+              localStorage.removeItem('accessToken');
+              setAccessToken(null);
+              setUser(null);
+            }
+          } catch (e) {
+            localStorage.removeItem('accessToken');
+            setAccessToken(null);
+            setUser(null);
+          }
+        } else {
+          // No canary cookie, clear localStorage just in case
+          localStorage.removeItem('accessToken');
+          setAccessToken(null);
+          setUser(null);
+        }
       } catch (error: any) {
-        // If everything fails, clear state
+        console.error('Auth initialization error:', error);
         localStorage.removeItem('accessToken');
         setAccessToken(null);
         setUser(null);
@@ -64,17 +90,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Handle redirect if user is already authenticated and on login page
   useEffect(() => {
-    if (!isLoading && user && window.location.pathname === '/login') {
+    if (!isLoading && user && typeof window !== 'undefined' && window.location.pathname === '/login') {
       router.push('/admin');
     }
   }, [user, isLoading, router]);
-
   const checkAuth = async () => {
-    // Keep this for manual refreshes if needed, but it's now mostly redundant 
-    // as the initAuth and interceptors handle everything.
+    if (!accessToken && !document.cookie.includes('sb-has-session=true')) {
+      setUser(null);
+      return;
+    }
+
     try {
-      const { user: userData } = await authService.getMe();
-      setUser(UserSchema.parse(userData));
+      const result = await authService.getMe();
+      if (result.user) {
+        setUser(UserSchema.parse(result.user));
+      } else {
+        throw new Error('Failed to fetch user');
+      }
     } catch (error) {
       setUser(null);
       setAccessToken(null);
@@ -84,22 +116,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const { accessToken: newToken, user: userData } = await authService.login({ email, password });
+      const result = await authService.login({ email, password });
 
-      // Rigorous validation of server response
+      const { accessToken: newToken, user: userData } = result;
       const validatedUser = UserSchema.parse(userData);
 
       setAccessToken(newToken);
       setUser(validatedUser);
       localStorage.setItem('accessToken', newToken);
-      
+
       router.push('/admin');
     } catch (error: any) {
-      // If it's a Zod error, it's a structural failure in API design
       if (error?.name === 'ZodError') {
         throw 'Structural profile data mismatch from server';
       }
-      throw error.response?.data?.message || 'Login failed';
+      throw typeof error === 'string' ? error : (error.message || 'Login failed');
     }
   };
 

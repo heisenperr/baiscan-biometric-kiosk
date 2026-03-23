@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server';
+import axios from 'axios';
+import { cookies } from 'next/headers';
 import { BACKEND_API_URL } from '@/lib/api';
 
-export async function POST(request: Request) {
-    const targetUrl = `${BACKEND_API_URL}/api/auth/logout`;
+export const dynamic = 'force-dynamic';
 
-    const headers = new Headers(request.headers);
-    headers.delete('host');
-
+export async function POST() {
     try {
-        const response = await fetch(targetUrl, {
-            method: 'POST',
-            headers: headers,
-            body: await request.blob(),
-            cache: 'no-store',
+        const cookieStore = await cookies();
+        const refreshToken = cookieStore.get('refreshToken')?.value;
+
+        const response = await axios.post(`${BACKEND_API_URL}/api/auth/logout`, {}, {
+            headers: {
+                Cookie: refreshToken ? `refreshToken=${refreshToken}` : ''
+            },
+            validateStatus: () => true
         });
 
-        const data = await response.blob();
-        const responseHeaders = new Headers(response.headers);
-        responseHeaders.delete('content-encoding'); 
-        
-        return new NextResponse(data, {
-            status: response.status,
-            headers: responseHeaders,
-        });
-    } catch (error) {
-        console.error('Logout Proxy Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error (Proxy)' }, { status: 500 });
+        const res = NextResponse.json({ message: 'Logged out' });
+
+        // Clear cookies
+        res.cookies.set('refreshToken', '', { maxAge: 0, path: '/' });
+        res.cookies.set('sb-has-session', '', { maxAge: 0, path: '/' });
+
+        return res;
+    } catch (error: any) {
+        console.error('Logout Route Error:', error.message);
+        return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
     }
 }

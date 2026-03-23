@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server';
+import axios from 'axios';
 import { BACKEND_API_URL } from '@/lib/api';
 
-export async function POST(request: Request) {
-    const targetUrl = `${BACKEND_API_URL}/api/auth/login`;
+export const dynamic = 'force-dynamic';
 
-    const headers = new Headers(request.headers);
-    headers.delete('host');
-
+export async function POST(req: Request) {
     try {
-        const response = await fetch(targetUrl, {
-            method: 'POST',
-            headers: headers,
-            body: await request.blob(),
-            cache: 'no-store',
+        const body = await req.json();
+        
+        const response = await axios.post(`${BACKEND_API_URL}/api/auth/login`, body, {
+            headers: { 'Content-Type': 'application/json' },
+            validateStatus: () => true
         });
 
-        const data = await response.blob();
-        const responseHeaders = new Headers(response.headers);
-        responseHeaders.delete('content-encoding'); 
-        
-        return new NextResponse(data, {
-            status: response.status,
-            headers: responseHeaders,
-        });
-    } catch (error) {
-        console.error('Login Proxy Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error (Proxy)' }, { status: 500 });
+        const res = NextResponse.json(response.data, { status: response.status });
+
+        // Forward Set-Cookie headers
+        const setCookieHeaders = response.headers['set-cookie'];
+        if (setCookieHeaders) {
+            setCookieHeaders.forEach(cookie => {
+                res.headers.append('Set-Cookie', cookie);
+            });
+        }
+
+        return res;
+    } catch (error: any) {
+        console.error('Login Route Error:', error.message);
+        return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
     }
 }
