@@ -1,15 +1,21 @@
-import board
-import busio
-import adafruit_vl53l1x
 import time
 import sys
 
-# Mock lgpio if it fails to load (safety for some containers)
 try:
+    import board
+    import busio
+    import adafruit_vl53l1x
     import lgpio
-except ImportError:
+except (ImportError, RuntimeError):
     from unittest.mock import MagicMock
-    sys.modules["lgpio"] = MagicMock()
+    lgpio = MagicMock()
+    board = MagicMock()
+    busio = MagicMock()
+    adafruit_vl53l1x = MagicMock()
+    sys.modules["lgpio"] = lgpio
+    sys.modules["board"] = board
+    sys.modules["busio"] = busio
+    sys.modules["adafruit_vl53l1x"] = adafruit_vl53l1x
 
 class VL53L1XSensor:
     def __init__(self, address=0x29):

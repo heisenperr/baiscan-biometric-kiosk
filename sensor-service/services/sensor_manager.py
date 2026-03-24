@@ -1,5 +1,6 @@
 import os
 from sensors.vl53l1x import VL53L1XSensor
+from sensors.hx711 import HX711Sensor
 
 class SensorManager:
     def __init__(self):
@@ -12,8 +13,9 @@ class SensorManager:
         print(f"[DEBUG] APP_ENV: {os.environ.get('APP_ENV')}")
         print(f"[DEBUG] MOCK_SENSORS: {self.mock_sensors}")
         
-        # Currently only focusing on VL53L1X
+        # Initialize available sensors
         self.sensors["ToF_Sensor"] = VL53L1XSensor()
+        self.sensors["Weight_Sensor"] = HX711Sensor()
         
         print("[INIT] Initializing hardware...")
         for name, sensor in self.sensors.items():

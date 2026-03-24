@@ -21,6 +21,16 @@ class SensorService {
     }
   }
 
+  async getHx711Weight(): Promise<number | null> {
+    try {
+      const response = await axios.get<{ weight: number | null }>(`${SENSOR_SERVICE_URL}/weight`);
+      return response.data.weight;
+    } catch (error: any) {
+      console.error('[ERROR] Failed to fetch weight from sensor-service:', error.message);
+      return null;
+    }
+  }
+
   startPolling(io: Server): void {
     setInterval(async () => {
       const distance = await this.getVl53l1xDistance();
@@ -32,6 +42,17 @@ class SensorService {
           timestamp: new Date().toISOString()
         };
         io.emit('sensor:height', data);
+      }
+
+      const weight = await this.getHx711Weight();
+      if (weight !== null) {
+        const data: SensorData = {
+          sensor: 'HX711',
+          value: weight,
+          unit: 'raw',
+          timestamp: new Date().toISOString()
+        };
+        io.emit('sensor:weight', data);
       }
     }, 100);
   }

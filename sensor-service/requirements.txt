@@ -4,3 +4,4 @@ lgpio
 smbus2
 fastapi
 uvicorn
+rpi-lgpio

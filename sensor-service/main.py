@@ -8,32 +8,39 @@ from services.sensor_manager import SensorManager
 app = FastAPI()
 manager = SensorManager()
 current_distance = None
+current_weight = None
 
 @app.get("/distance")
 async def get_distance():
     return {"distance": current_distance}
 
+@app.get("/weight")
+async def get_weight():
+    return {"weight": current_weight}
+
 def sensor_loop():
-    global current_distance
+    global current_distance, current_weight
     tof = manager.get_sensor("ToF_Sensor")
-    if not tof:
-        print("[ERROR] ToF_Sensor not found in manager.")
+    hx = manager.get_sensor("Weight_Sensor")
+    
+    if not tof and not hx:
+        print("[ERROR] No sensors found in manager.")
         return
 
     print("[SUCCESS] Sensor loop started.")
     try:
         while True:
-            dist = tof.distance
-            current_distance = dist
-            # Also keep console logging for debugging
-            if dist is not None:
-                # print(f"Distance: {dist} mm", flush=True)
-                pass
+            if tof:
+                current_distance = tof.distance
+            if hx:
+                current_weight = hx.weight
+            
             time.sleep(0.1) # Faster sampling for backend
     except Exception as e:
         print(f"[ERROR] sensor_loop error: {e}")
     finally:
-        tof.stop()
+        if tof: tof.stop()
+        if hx: hx.stop()
 
 def main():
     print("========================================")
