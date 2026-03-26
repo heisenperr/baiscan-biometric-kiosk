@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import threading
 
 try:
     import RPi.GPIO as GPIO
@@ -23,6 +24,7 @@ class HX711Sensor:
         # Default calibration factor (reference unit)
         # Use environment variable if available, otherwise default to 1.0 (raw)
         self.reference_unit = float(os.environ.get("WEIGHT_CALIBRATION_FACTOR", 1.0))
+        self.lock = threading.Lock()
 
     def initialize(self):
         try:
@@ -41,17 +43,29 @@ class HX711Sensor:
     def weight(self):
         """Returns weight in kg (scaled using reference_unit)"""
         if self.sensor:
-            try:
-                # get_weight(1) applies the reference_unit and offset
-                val = self.sensor.get_weight(1)
-                # Ensure it doesn't show negative zero or tiny negative values when empty
-                if val is not None and val < 0 and val > -0.05:
-                    val = 0.0
-                self._last_weight = val
-                return val
-            except Exception as e:
-                print(f"[ERROR] reading HX711: {e}")
+            with self.lock:
+                try:
+                    # get_weight(1) applies the reference_unit and offset
+                    val = self.sensor.get_weight(1)
+                    # Ensure it doesn't show negative zero or tiny negative values when empty
+                    if val is not None and val < 0 and val > -0.05:
+                        val = 0.0
+                    self._last_weight = val
+                    return val
+                except Exception as e:
+                    print(f"[ERROR] reading HX711: {e}")
         return self._last_weight
+
+    def tare(self, times=15):
+        """Synchronized tare operation"""
+        if self.sensor:
+            with self.lock:
+                try:
+                    return self.sensor.tare(times)
+                except Exception as e:
+                    print(f"[ERROR] taring HX711: {e}")
+                    raise e
+        return None
 
     def stop(self):
         if self.sensor:

@@ -84,8 +84,11 @@ class HX711:
        # Clock HX711 Digital Serial Clock (PD_SCK).  DOUT will be
        # ready 1us after PD_SCK rising edge, so we sample after
        # lowering PD_SCL, when we know DOUT will be stable.
+       # Added micro-delays for RPi 5 stability
        GPIO.output(self.PD_SCK, True)
+       time.sleep(0.000001) # 1us high
        GPIO.output(self.PD_SCK, False)
+       time.sleep(0.000001) # 1us low
        value = GPIO.input(self.DOUT)
 
        # Convert Boolean to int and return it.
