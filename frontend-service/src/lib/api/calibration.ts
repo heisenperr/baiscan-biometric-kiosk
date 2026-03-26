@@ -24,7 +24,7 @@ export interface LiveCalibration {
 }
 
 export const getAllCalibrations = (): Promise<{ data: CalibrationRecord[] }> =>
-    api.get('/api/calibration');
+    api.get('/api/calibration/hx711');
 
 export const getCalibration = (sensor: string): Promise<{ data: CalibrationRecord }> =>
     api.get(`/api/calibration/${sensor}`);
@@ -34,7 +34,7 @@ export const getLiveCalibration = (): Promise<{ data: LiveCalibration }> =>
 
 export const saveCalibration = (
     payload: SaveCalibrationPayload,
-): Promise<{ data: CalibrationRecord }> => api.post('/api/calibration', payload);
+): Promise<{ data: CalibrationRecord }> => api.post('/api/calibration/hx711', payload);
 
 export const tareSensor = (): Promise<{ data: { status: string; offset: number; reference_unit: number } }> =>
     api.post('/api/calibration/tare');
