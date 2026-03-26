@@ -15,8 +15,6 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     i2c-tools \
     libi2c-dev \
-    liblgpio-dev \
-    python3-lgpio \
     git \
     cmake \
     build-essential \
