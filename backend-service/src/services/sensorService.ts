@@ -49,7 +49,7 @@ class SensorService {
         const data: SensorData = {
           sensor: 'HX711',
           value: weight,
-          unit: 'raw',
+          unit: 'kg',
           timestamp: new Date().toISOString()
         };
         io.emit('sensor:weight', data);

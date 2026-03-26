@@ -82,12 +82,12 @@ export default function WeightDisplay({ isActive, onBack }: WeightDisplayProps) 
 
             <div className="text-center relative z-10">
               <span className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
-                {weight !== null ? Math.round(weight) : "--"}
+                {weight !== null ? weight.toFixed(1) : "--"}
               </span>
               <div className="flex items-center justify-center space-x-2 mt-1">
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span>
                 <span className="text-sm font-bold text-blue-600 uppercase tracking-widest opacity-80">
-                  raw
+                  kg
                 </span>
               </div>
             </div>

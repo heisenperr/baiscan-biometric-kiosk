@@ -20,11 +20,18 @@ class HX711Sensor:
         self.pd_sck = pd_sck
         self.sensor = None
         self._last_weight = None
+        # Default calibration factor (reference unit)
+        # Use environment variable if available, otherwise default to 1.0 (raw)
+        self.reference_unit = float(os.environ.get("WEIGHT_CALIBRATION_FACTOR", 1.0))
 
     def initialize(self):
         try:
             self.sensor = HX711(self.dout, self.pd_sck)
             self.sensor.set_reading_format("MSB", "MSB")
+            self.sensor.set_reference_unit(self.reference_unit)
+            self.sensor.reset()
+            self.sensor.tare()
+            print(f"[INFO] HX711 initialized with reference unit: {self.reference_unit}")
             return True
         except Exception as e:
             print(f"[ERROR] Failed to initialize HX711: {e}")
@@ -32,11 +39,14 @@ class HX711Sensor:
 
     @property
     def weight(self):
-        """Returns weight (raw or scaled depending on configuration)"""
+        """Returns weight in kg (scaled using reference_unit)"""
         if self.sensor:
             try:
-                # get_value(1) gives raw reading without math/offset
-                val = self.sensor.get_value(1)
+                # get_weight(1) applies the reference_unit and offset
+                val = self.sensor.get_weight(1)
+                # Ensure it doesn't show negative zero or tiny negative values when empty
+                if val is not None and val < 0 and val > -0.05:
+                    val = 0.0
                 self._last_weight = val
                 return val
             except Exception as e:

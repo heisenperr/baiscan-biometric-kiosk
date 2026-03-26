@@ -13,6 +13,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - APP_ENV=development
+      - WEIGHT_CALIBRATION_FACTOR=${WEIGHT_CALIBRATION_FACTOR:-1.0}
     restart: always
 
   db:
