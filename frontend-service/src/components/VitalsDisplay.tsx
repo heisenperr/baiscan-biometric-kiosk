@@ -38,9 +38,6 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
     socket.on("sensor:vitals", (data: any) => {
       // Defensive check to ensure data is an object and has required fields
       if (isActive && data && typeof data === 'object' && !Array.isArray(data)) {
-        if (data.finger_detected) {
-            console.log("[DEBUG] UI - Received vitals:", data);
-        }
         setVitals({
           bpm: typeof data.bpm === 'number' ? data.bpm : 0,
           spo2: typeof data.spo2 === 'number' ? data.spo2 : 0,

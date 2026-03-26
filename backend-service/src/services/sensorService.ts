@@ -40,9 +40,6 @@ class SensorService {
   async getVitals(): Promise<VitalsData | null> {
     try {
       const response = await axios.get<VitalsData>(`${SENSOR_SERVICE_URL}/vitals`);
-      if (response.data.finger_detected) {
-          console.log('[DEBUG] Backend - Vitals from sensor-service:', response.data);
-      }
       return response.data;
     } catch (error: any) {
       console.error('[ERROR] Failed to fetch vitals from sensor-service:', error.message);
@@ -76,9 +73,6 @@ class SensorService {
 
       const vitals = await this.getVitals();
       if (vitals) {
-        if (vitals.finger_detected) {
-            console.log('[DEBUG] Backend - Emitting sensor:vitals');
-        }
         io.emit('sensor:vitals', {
           ...vitals,
           timestamp: new Date().toISOString()

@@ -110,8 +110,6 @@ def sensor_loop():
             if vitals_sensor:
                 global current_vitals
                 current_vitals = vitals_sensor.vitals
-                if current_vitals.get("finger_detected"):
-                    print(f"[DEBUG] Sensor Loop - Vitals read: {current_vitals}")
         except Exception as e:
             print(f"[ERROR] sensor_loop read error: {e}")
 
