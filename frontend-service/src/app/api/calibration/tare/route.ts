@@ -11,6 +11,7 @@ export async function POST(req: Request) {
             headers: {
                 ...(authHeader ? { Authorization: authHeader } : {})
             },
+            timeout: 30000,
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });

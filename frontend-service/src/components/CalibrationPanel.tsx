@@ -126,12 +126,18 @@ export default function CalibrationPanel() {
     setStatus("taring");
     setStatusMsg("");
     try {
-      const { data } = await tareSensor();
-      setOffset(String(data.offset));
-      setStatus("success");
-      setStatusMsg(`Tare complete. New offset: ${data.offset.toFixed(2)}`);
-      loadHistory();
-    } catch {
+      const resp = await tareSensor();
+      const data = resp?.data;
+      
+      if (data && typeof data.offset === 'number') {
+        setOffset(String(data.offset));
+        setStatus("success");
+        setStatusMsg(`Tare complete. New offset: ${data.offset.toFixed(2)}`);
+        loadHistory();
+      } else {
+        throw new Error("Invalid response from sensor");
+      }
+    } catch (err: any) {
       setStatus("error");
       setStatusMsg("Tare failed — sensor may be unavailable.");
     }

@@ -51,7 +51,11 @@ class CalibrationService {
 
     /** Trigger a hardware tare on the sensor-service and return the new offset. */
     async tareSensor(): Promise<number> {
-        const res = await axios.post<{ offset: number }>(`${SENSOR_SERVICE_URL}/tare`);
+        const res = await axios.post<{ offset: number }>(
+            `${SENSOR_SERVICE_URL}/tare`, 
+            {}, 
+            { timeout: 30000 }
+        );
         return res.data.offset;
     }
 
