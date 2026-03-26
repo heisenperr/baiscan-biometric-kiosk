@@ -57,12 +57,18 @@ export default function CalibrationPanel() {
   const loadHistory = useCallback(async () => {
     try {
       const { data } = await getAllCalibrations();
-      setHistory(data);
-      const hx = data.find((r) => r.sensor_name === "HX711");
-      if (hx) {
-        setReferenceUnit(String(hx.reference_unit));
-        setOffset(String(hx.offset));
-        setNotes(hx.notes ?? "");
+      
+      if (Array.isArray(data)) {
+        setHistory(data);
+        // Find the most recent record to populate the form fields
+        const hx = data[0]; // history is sorted by DESC updated_at
+        if (hx) {
+          setReferenceUnit(String(hx.reference_unit));
+          setOffset(String(hx.offset));
+          setNotes(hx.notes ?? "");
+        }
+      } else {
+        setHistory([]);
       }
     } catch {
       // silently ignore on first load

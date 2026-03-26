@@ -5,12 +5,9 @@ import calibrationService from '../services/calibrationService';
 export const getCalibration = async (req: Request, res: Response): Promise<void> => {
     try {
         const { sensor } = req.params;
-        const record = await calibrationService.getCalibration(sensor);
-        if (!record) {
-            res.status(404).json({ message: `No calibration found for sensor: ${sensor}` });
-            return;
-        }
-        res.json(record);
+        const history = await calibrationService.getCalibrationHistory(sensor);
+        // Always return an array to prevent frontend .map() crashes
+        res.json(history ?? []);
     } catch (err: any) {
         console.error('[CALIBRATION] GET error:', err.message);
         res.status(500).json({ message: 'Failed to fetch calibration' });
