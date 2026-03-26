@@ -26,7 +26,7 @@ interface CalibrationUpdatedEvent {
   updated_at: string;
 }
 
-type Status = "idle" | "saving" | "success" | "error" | "taring";
+type Status = "idle" | "saving" | "success" | "error" | "taring" | "restoring";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function fmt(date: string) {
@@ -149,8 +149,34 @@ export default function CalibrationPanel() {
     }
   };
 
+  const handleRestore = async (rec: CalibrationRecord) => {
+    // 1. Populate UI fields immediately
+    setReferenceUnit(String(rec.reference_unit));
+    setOffset(String(rec.offset));
+    setNotes(rec.notes ?? "");
+    
+    // 2. Apply to sensor
+    setStatus("restoring");
+    setStatusMsg(`Restoring calibration from ${fmt(rec.updated_at)}...`);
+    
+    try {
+      await saveCalibration({ 
+        sensor_name: rec.sensor_name, 
+        reference_unit: rec.reference_unit, 
+        offset: rec.offset, 
+        notes: `Restored from record #${rec.id}` 
+      });
+      setStatus("success");
+      setStatusMsg("Calibration restored and applied.");
+      loadHistory();
+    } catch {
+      setStatus("error");
+      setStatusMsg("Failed to restore calibration. Sensor service unreachable.");
+    }
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
-  const isBusy = status === "saving" || status === "taring";
+  const isBusy = status === "saving" || status === "taring" || status === "restoring";
 
   return (
     <div className="space-y-8">
@@ -362,14 +388,7 @@ export default function CalibrationPanel() {
                 {history.map((rec) => (
                   <div
                     key={rec.id}
-                    className="group p-5 rounded-2xl bg-slate-50/60 hover:bg-blue-50/40 border border-transparent hover:border-blue-100/60 transition-all cursor-default"
-                    onClick={() => {
-                      setReferenceUnit(String(rec.reference_unit));
-                      setOffset(String(rec.offset));
-                      setNotes(rec.notes ?? "");
-                      setStatus("idle");
-                    }}
-                    title="Click to restore this calibration"
+                    className="group relative p-5 rounded-2xl bg-slate-50/60 hover:bg-blue-50/40 border border-transparent hover:border-blue-100/60 transition-all cursor-default"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[12px] font-black text-blue-600 uppercase tracking-[0.15em] bg-blue-100/60 px-2.5 py-0.5 rounded-full">
@@ -392,9 +411,32 @@ export default function CalibrationPanel() {
                     {rec.notes && (
                       <p className="text-[12px] text-slate-400 font-bold mt-2 truncate">{rec.notes}</p>
                     )}
-                    <p className="text-[11px] text-slate-300 font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Click to restore →
-                    </p>
+                    
+                    {/* Hover actions */}
+                    <div className="flex items-center space-x-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => {
+                          setReferenceUnit(String(rec.reference_unit));
+                          setOffset(String(rec.offset));
+                          setNotes(rec.notes ?? "");
+                          setStatus("idle");
+                        }}
+                        disabled={isBusy}
+                        className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest px-2 py-1 bg-white rounded-lg border border-slate-100 shadow-sm"
+                      >
+                        Load to edit
+                      </button>
+                      <button
+                        onClick={() => handleRestore(rec)}
+                        disabled={isBusy}
+                        className="text-[11px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest px-3 py-1 bg-blue-100/50 hover:bg-blue-100 rounded-lg shadow-sm flex items-center space-x-1"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Restore Now</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
