@@ -1,6 +1,7 @@
 import os
 from sensors.vl53l1x import VL53L1XSensor
 from sensors.hx711 import HX711Sensor
+from sensors.max30102 import MAX30102Sensor
 
 class SensorManager:
     def __init__(self):
@@ -16,6 +17,7 @@ class SensorManager:
         # Initialize available sensors
         self.sensors["ToF_Sensor"] = VL53L1XSensor()
         self.sensors["Weight_Sensor"] = HX711Sensor()
+        self.sensors["Vitals_Sensor"] = MAX30102Sensor()
         
         print("[INIT] Initializing hardware...")
         for name, sensor in self.sensors.items():

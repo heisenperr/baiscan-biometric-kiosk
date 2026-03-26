@@ -12,6 +12,7 @@ manager = SensorManager()
 # ── Shared state ─────────────────────────────────────────────────────────────
 current_distance = None
 current_weight = None
+current_vitals = {"bpm": 0, "spo2": 0, "finger_detected": False}
 
 
 # ── Pydantic models ─────────────────────────────────────────────────────────
@@ -42,6 +43,11 @@ async def get_distance():
 @app.get("/weight")
 async def get_weight():
     return {"weight": current_weight}
+
+
+@app.get("/vitals")
+async def get_vitals():
+    return current_vitals
 
 
 # ── Calibration endpoints ────────────────────────────────────────────────────
@@ -99,6 +105,11 @@ def sensor_loop():
                 current_distance = tof.distance
             if hx and not hx.is_busy:
                 current_weight = hx.weight
+            
+            vitals_sensor = manager.get_sensor("Vitals_Sensor")
+            if vitals_sensor:
+                global current_vitals
+                current_vitals = vitals_sensor.vitals
         except Exception as e:
             print(f"[ERROR] sensor_loop read error: {e}")
 

@@ -10,6 +10,12 @@ interface SensorData {
   timestamp: string;
 }
 
+interface VitalsData {
+  bpm: number;
+  spo2: number;
+  finger_detected: boolean;
+}
+
 class SensorService {
   async getVl53l1xDistance(): Promise<number | null> {
     try {
@@ -27,6 +33,16 @@ class SensorService {
       return response.data.weight;
     } catch (error: any) {
       console.error('[ERROR] Failed to fetch weight from sensor-service:', error.message);
+      return null;
+    }
+  }
+
+  async getVitals(): Promise<VitalsData | null> {
+    try {
+      const response = await axios.get<VitalsData>(`${SENSOR_SERVICE_URL}/vitals`);
+      return response.data;
+    } catch (error: any) {
+      console.error('[ERROR] Failed to fetch vitals from sensor-service:', error.message);
       return null;
     }
   }
@@ -53,6 +69,14 @@ class SensorService {
           timestamp: new Date().toISOString()
         };
         io.emit('sensor:weight', data);
+      }
+
+      const vitals = await this.getVitals();
+      if (vitals) {
+        io.emit('sensor:vitals', {
+          ...vitals,
+          timestamp: new Date().toISOString()
+        });
       }
     }, 100);
   }
