@@ -131,6 +131,7 @@ class MAX30102:
             num_samples = (w_ptr - r_ptr) % 32
 
             if num_samples > 0:
+                # print(f"[DEBUG] MAX30102 - Samples available: {num_samples}")
                 for _ in range(num_samples):
                     red, ir = self._read_fifo()
                     ir_data.append(ir)
@@ -141,9 +142,13 @@ class MAX30102:
 
                 if len(ir_data) == self.BUFFER_SIZE:
                     if np.mean(ir_data) < 30000: # Finger detection
+                        if self.is_finger_detected:
+                            print("[DEBUG] MAX30102 - Finger removed")
                         self.is_finger_detected = False
                         self.bpm, self.spo2 = 0, 0
                     else:
+                        if not self.is_finger_detected:
+                            print(f"[DEBUG] MAX30102 - Finger detected! Mean IR: {int(np.mean(ir_data))}")
                         self.is_finger_detected = True
                         hb, hb_v, sp, sp_v = self._calculate_vitals(ir_data, red_data)
                         if hb_v:
