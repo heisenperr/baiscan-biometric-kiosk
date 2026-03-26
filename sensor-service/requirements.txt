@@ -2,6 +2,7 @@ adafruit-blinka
 adafruit-circuitpython-vl53l1x
 lgpio
 smbus2
+numpy
 fastapi
 uvicorn
 rpi-lgpio
