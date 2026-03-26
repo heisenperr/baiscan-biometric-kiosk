@@ -1,7 +1,8 @@
 import time
 import os
 import threading
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, validator
 import uvicorn
 from services.sensor_manager import SensorManager
 
@@ -10,6 +11,19 @@ manager = SensorManager()
 current_distance = None
 current_weight = None
 
+# ── Calibration models ──────────────────────────────────────────────────────
+class CalibrationRequest(BaseModel):
+    reference_unit: float
+    offset: float
+
+    @validator('reference_unit')
+    def reference_unit_nonzero(cls, v):
+        if v == 0:
+            raise ValueError('reference_unit cannot be zero')
+        return v
+
+
+# ── Existing sensor endpoints ────────────────────────────────────────────────
 @app.get("/distance")
 async def get_distance():
     return {"distance": current_distance}
@@ -17,6 +31,49 @@ async def get_distance():
 @app.get("/weight")
 async def get_weight():
     return {"weight": current_weight}
+
+
+# ── Calibration endpoints ────────────────────────────────────────────────────
+@app.get("/calibration")
+async def get_calibration():
+    """Return the currently active calibration values from the live HX711 instance."""
+    hx = manager.get_sensor("Weight_Sensor")
+    if not hx or not hx.sensor:
+        raise HTTPException(status_code=503, detail="Weight sensor not available")
+    return {
+        "sensor": "HX711",
+        "reference_unit": hx.sensor.get_reference_unit_A(),
+        "offset": hx.sensor.get_offset_A(),
+    }
+
+
+@app.post("/calibrate")
+async def set_calibration(payload: CalibrationRequest):
+    """Hot-patch the live HX711 instance. Effective on the very next sensor poll."""
+    hx = manager.get_sensor("Weight_Sensor")
+    if not hx or not hx.sensor:
+        raise HTTPException(status_code=503, detail="Weight sensor not available")
+    hx.sensor.set_reference_unit(payload.reference_unit)
+    hx.sensor.set_offset(payload.offset)
+    # Keep the wrapper's cached value in sync too
+    hx.reference_unit = payload.reference_unit
+    print(f"[CALIBRATION] reference_unit={payload.reference_unit}, offset={payload.offset}")
+    return {
+        "status": "ok",
+        "reference_unit": payload.reference_unit,
+        "offset": payload.offset,
+    }
+
+
+@app.post("/tare")
+async def tare_sensor():
+    """Re-tare the HX711 at the current zero-load reading and return the new offset."""
+    hx = manager.get_sensor("Weight_Sensor")
+    if not hx or not hx.sensor:
+        raise HTTPException(status_code=503, detail="Weight sensor not available")
+    new_offset = hx.sensor.tare(times=15)
+    print(f"[TARE] New offset: {new_offset}")
+    return {"status": "ok", "offset": new_offset}
 
 def sensor_loop():
     global current_distance, current_weight

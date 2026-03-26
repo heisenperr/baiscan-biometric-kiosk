@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import sensorRoutes from './routes/sensorRoutes';
 import authRoutes from './routes/authRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import calibrationRoutes from './routes/calibrationRoutes';
 import sensorService from './services/sensorService';
 import { AppDataSource } from './data-source';
 import { seedAdmin } from './seeds/adminSeeder';
@@ -45,6 +46,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/sensor', sensorRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/notification', notificationRoutes);
+app.use('/api/calibration', calibrationRoutes);
 
 // Socket.IO
 app.set('io', io); // Make 'io' accessible to controllers
