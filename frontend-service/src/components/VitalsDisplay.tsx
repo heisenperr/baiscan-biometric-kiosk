@@ -11,6 +11,7 @@ interface VitalsDisplayProps {
 }
 
 const STABILIZE_DURATION_MS = 2000;
+const STABILIZE_DELAY_MS = 7000; // 7s delay before starting stabilization
 const STABILIZE_THRESHOLD_BPM = 3;
 const STABILIZE_THRESHOLD_SPO2 = 2;
 
@@ -29,6 +30,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
   const [spo2Progress, setSpo2Progress] = useState(0);
 
   // Stabilization tracking refs
+  const fingerDetectedAtRef = useRef<number | null>(null);
   const bpmStableStartRef = useRef<number | null>(null);
   const bpmBaselineRef = useRef<number>(0);
   const spo2StableStartRef = useRef<number | null>(null);
@@ -56,6 +58,21 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
     return () => { socket.disconnect(); };
   }, [isActive]);
 
+  // Finger detection timing
+  useEffect(() => {
+    if (vitals.finger_detected) {
+      if (fingerDetectedAtRef.current === null) {
+        fingerDetectedAtRef.current = Date.now();
+      }
+    } else {
+      fingerDetectedAtRef.current = null;
+      bpmStableStartRef.current = null;
+      spo2StableStartRef.current = null;
+      setBpmProgress(0);
+      setSpo2Progress(0);
+    }
+  }, [vitals.finger_detected]);
+
   // BPM stabilization logic
   useEffect(() => {
     if (bpmCaptured || !vitals.finger_detected || vitals.bpm <= 0) {
@@ -64,6 +81,14 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
     }
 
     const now = Date.now();
+    
+    // Only start stabilizing after the initial delay
+    if (fingerDetectedAtRef.current === null || (now - fingerDetectedAtRef.current < STABILIZE_DELAY_MS)) {
+      bpmStableStartRef.current = null;
+      setBpmProgress(0);
+      return;
+    }
+
     if (bpmStableStartRef.current === null) {
       bpmStableStartRef.current = now;
       bpmBaselineRef.current = vitals.bpm;
@@ -82,6 +107,14 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
     }
 
     const now = Date.now();
+
+    // Only start stabilizing after the initial delay
+    if (fingerDetectedAtRef.current === null || (now - fingerDetectedAtRef.current < STABILIZE_DELAY_MS)) {
+      spo2StableStartRef.current = null;
+      setSpo2Progress(0);
+      return;
+    }
+
     if (spo2StableStartRef.current === null) {
       spo2StableStartRef.current = now;
       spo2BaselineRef.current = vitals.spo2;
@@ -228,9 +261,17 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
 
           {/* Status Indicator */}
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${allCaptured ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" : vitals.finger_detected ? "bg-blue-500 animate-pulse" : "bg-slate-300"}`}></div>
+            <div className={`w-2 h-2 rounded-full 
+              ${allCaptured ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" : 
+                vitals.finger_detected ? (
+                  fingerDetectedAtRef.current && (Date.now() - fingerDetectedAtRef.current < STABILIZE_DELAY_MS) ? "bg-amber-400 animate-pulse" : "bg-blue-500 animate-pulse"
+                ) : "bg-slate-300"}`}
+            ></div>
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em]">
-              {allCaptured ? "All Vitals Captured" : vitals.finger_detected ? "Stabilizing..." : "Awaiting Finger"}
+              {allCaptured ? "All Vitals Captured" : 
+                vitals.finger_detected ? (
+                  fingerDetectedAtRef.current && (Date.now() - fingerDetectedAtRef.current < STABILIZE_DELAY_MS) ? "Settling..." : "Stabilizing..."
+                ) : "Awaiting Finger"}
             </span>
           </div>
 
