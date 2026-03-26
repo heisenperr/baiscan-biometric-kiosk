@@ -1,4 +1,11 @@
-import smbus
+try:
+    import smbus
+except ImportError:
+    try:
+        import smbus2 as smbus
+    except ImportError:
+        # If both fail, we will catch this during initialization
+        smbus = None
 import time
 import threading
 import numpy as np

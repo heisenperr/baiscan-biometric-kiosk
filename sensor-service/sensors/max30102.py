@@ -8,8 +8,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
     from lib.max30102 import MAX30102
-except ImportError:
-    # Fallback for local testing or if paths differ
+except ImportError as e:
+    print(f"[WARNING] Could not import real MAX30102 driver: {e}")
+    print("[WARNING] Falling back to Mock sensor for testing.")
     from unittest.mock import MagicMock
     MAX30102 = MagicMock()
 
