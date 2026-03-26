@@ -11,6 +11,7 @@ export async function GET(req: Request) {
             headers: {
                 ...(authHeader ? { Authorization: authHeader } : {})
             },
+            timeout: 10000,
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
                 'Content-Type': 'application/json',
                 ...(authHeader ? { Authorization: authHeader } : {})
             },
+            timeout: 10000,
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });

@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import threading
 
 try:
     import RPi.GPIO as GPIO
@@ -23,6 +24,8 @@ class HX711Sensor:
         # Default calibration factor (reference unit)
         # Use environment variable if available, otherwise default to 1.0 (raw)
         self.reference_unit = float(os.environ.get("WEIGHT_CALIBRATION_FACTOR", 1.0))
+        # Flag to pause the polling loop during tare/calibrate
+        self._busy = threading.Event()
 
     def initialize(self):
         try:
@@ -38,8 +41,15 @@ class HX711Sensor:
             return False
 
     @property
+    def is_busy(self):
+        return self._busy.is_set()
+
+    @property
     def weight(self):
-        """Returns weight in kg (scaled using reference_unit)"""
+        """Returns weight in kg (scaled using reference_unit).
+        Skips hardware read if a tare/calibrate is in progress."""
+        if self._busy.is_set():
+            return self._last_weight
         if self.sensor:
             try:
                 # get_weight(1) applies the reference_unit and offset
@@ -53,9 +63,34 @@ class HX711Sensor:
                 print(f"[ERROR] reading HX711: {e}")
         return self._last_weight
 
+    def tare(self, times=15):
+        """Thread-safe tare: pauses the polling loop, runs tare, resumes."""
+        if not self.sensor:
+            raise RuntimeError("Sensor not initialized")
+        self._busy.set()
+        try:
+            new_offset = self.sensor.tare(times)
+            print(f"[TARE] New offset: {new_offset}")
+            return new_offset
+        finally:
+            self._busy.clear()
+
+    def calibrate(self, reference_unit, offset):
+        """Thread-safe calibrate: pauses polling, updates both lib and wrapper."""
+        if not self.sensor:
+            raise RuntimeError("Sensor not initialized")
+        self._busy.set()
+        try:
+            self.sensor.set_reference_unit(reference_unit)
+            self.sensor.set_offset(offset)
+            self.reference_unit = reference_unit
+            print(f"[CALIBRATION] reference_unit={reference_unit}, offset={offset}")
+        finally:
+            self._busy.clear()
+
     def stop(self):
         if self.sensor:
             try:
                 GPIO.cleanup()
             except Exception:
-                pass
+                pass

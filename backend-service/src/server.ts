@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import calibrationRoutes from './routes/calibrationRoutes';
 import sensorService from './services/sensorService';
+import calibrationService from './services/calibrationService';
 import { AppDataSource } from './data-source';
 import { seedAdmin } from './seeds/adminSeeder';
 
@@ -33,7 +34,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({
     status: 'online',
     service: 'BaiScan Biometric Kiosk Backend',
@@ -49,7 +50,7 @@ app.use('/api/notification', notificationRoutes);
 app.use('/api/calibration', calibrationRoutes);
 
 // Socket.IO
-app.set('io', io); // Make 'io' accessible to controllers
+app.set('io', io);
 
 io.on('connection', (socket) => {
   console.log('[SOCKET] Client connected:', socket.id);
@@ -72,6 +73,13 @@ const startServer = async () => {
       
       // Auto-seed admin account
       await seedAdmin(AppDataSource);
+
+      // Restore latest calibration from DB and push to sensor-service
+      try {
+        await calibrationService.restoreFromDatabase();
+      } catch (err: any) {
+        console.warn('[CALIBRATION] Could not restore on startup (non-fatal):', err.message);
+      }
       
       httpServer.listen(PORT, () => {
         console.log(`========================================`);

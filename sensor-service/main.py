@@ -6,12 +6,15 @@ from pydantic import BaseModel, validator
 import uvicorn
 from services.sensor_manager import SensorManager
 
-app = FastAPI()
+app = FastAPI(title="BAI Scan Sensor Service", version="1.0.0")
 manager = SensorManager()
+
+# ── Shared state ─────────────────────────────────────────────────────────────
 current_distance = None
 current_weight = None
 
-# ── Calibration models ──────────────────────────────────────────────────────
+
+# ── Pydantic models ─────────────────────────────────────────────────────────
 class CalibrationRequest(BaseModel):
     reference_unit: float
     offset: float
@@ -23,10 +26,18 @@ class CalibrationRequest(BaseModel):
         return v
 
 
-# ── Existing sensor endpoints ────────────────────────────────────────────────
+# ── Health ───────────────────────────────────────────────────────────────────
+@app.get("/health")
+async def health():
+    """Liveness check for Docker healthchecks."""
+    return {"status": "ok"}
+
+
+# ── Sensor endpoints ────────────────────────────────────────────────────────
 @app.get("/distance")
 async def get_distance():
     return {"distance": current_distance}
+
 
 @app.get("/weight")
 async def get_weight():
@@ -53,11 +64,7 @@ async def set_calibration(payload: CalibrationRequest):
     hx = manager.get_sensor("Weight_Sensor")
     if not hx or not hx.sensor:
         raise HTTPException(status_code=503, detail="Weight sensor not available")
-    hx.sensor.set_reference_unit(payload.reference_unit)
-    hx.sensor.set_offset(payload.offset)
-    # Keep the wrapper's cached value in sync too
-    hx.reference_unit = payload.reference_unit
-    print(f"[CALIBRATION] reference_unit={payload.reference_unit}, offset={payload.offset}")
+    hx.calibrate(payload.reference_unit, payload.offset)
     return {
         "status": "ok",
         "reference_unit": payload.reference_unit,
@@ -71,39 +78,39 @@ async def tare_sensor():
     hx = manager.get_sensor("Weight_Sensor")
     if not hx or not hx.sensor:
         raise HTTPException(status_code=503, detail="Weight sensor not available")
-    new_offset = hx.sensor.tare(times=15)
-    print(f"[TARE] New offset: {new_offset}")
+    new_offset = hx.tare(times=15)
     return {"status": "ok", "offset": new_offset}
 
+
+# ── Background polling ───────────────────────────────────────────────────────
 def sensor_loop():
     global current_distance, current_weight
     tof = manager.get_sensor("ToF_Sensor")
     hx = manager.get_sensor("Weight_Sensor")
-    
+
     if not tof and not hx:
         print("[ERROR] No sensors found in manager.")
         return
 
     print("[SUCCESS] Sensor loop started.")
-    try:
-        while True:
+    while True:
+        try:
             if tof:
                 current_distance = tof.distance
-            if hx:
+            if hx and not hx.is_busy:
                 current_weight = hx.weight
-            
-            time.sleep(0.1) # Faster sampling for backend
-    except Exception as e:
-        print(f"[ERROR] sensor_loop error: {e}")
-    finally:
-        if tof: tof.stop()
-        if hx: hx.stop()
+        except Exception as e:
+            print(f"[ERROR] sensor_loop read error: {e}")
 
+        time.sleep(0.1)
+
+
+# ── Entrypoint ───────────────────────────────────────────────────────────────
 def main():
     print("========================================")
     print("BAI Scan - Biometric Kiosk Sensor Service")
     print("========================================")
-    
+
     report = manager.validate_sensors()
     print("\n[STARTUP] Validating sensors...")
     for sensor, status in report.items():
@@ -115,6 +122,7 @@ def main():
     # Start FastAPI server
     print("\n[INFO] Starting API server on port 8000...")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="error")
+
 
 if __name__ == "__main__":
     main()
