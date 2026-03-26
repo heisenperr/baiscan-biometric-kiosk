@@ -43,7 +43,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
 
   return (
     <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700 w-full max-w-2xl mx-auto overflow-hidden relative">
-      {/* Mind Blown Icon - Project Signature */}
+      {/* Mind Blown Icon */}
       <div className="absolute top-0 right-0 p-2 z-20 pointer-events-none">
         <Image
           src="/mindblown.jpg"
@@ -57,7 +57,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
       {/* Standard Back Button */}
       <button
         onClick={onBack}
-        className="self-start mb-6 text-slate-400 hover:text-blue-600 transition-all flex items-center space-x-2 font-bold uppercase tracking-[0.25em] text-[10px] group active:scale-95 px-4"
+        className="self-start mb-4 text-slate-400 hover:text-blue-600 transition-all flex items-center space-x-2 font-bold uppercase tracking-[0.25em] text-[10px] group active:scale-95"
       >
         <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center transition-all group-hover:border-blue-200 group-hover:shadow-md">
           <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,72 +67,73 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
         <span className="opacity-60 group-hover:opacity-100">Cancel Scan</span>
       </button>
 
-      {/* Main Content Area - Vertical for 7-inch Narrow Display */}
-      <div className="flex flex-col items-center space-y-8 w-full p-4 pb-12">
+      {/* Two-Panel Layout: Vitals Left | Instructions Right */}
+      <div className="relative flex items-center justify-center space-x-10">
         
-        {/* Heart Rate Section */}
-        <div className="relative flex items-center justify-center space-x-8 w-full">
+        {/* Left Panel — Stacked Vitals Rings */}
+        <div className="flex flex-col items-center space-y-5 flex-shrink-0">
+          {/* BPM Ring */}
           <div className={`
-            w-44 h-44 rounded-[2.5rem] p-1.5 transition-all duration-700 bg-white shadow-2xl relative
+            w-32 h-32 rounded-[2rem] p-1 transition-all duration-700 shadow-xl relative
             ${vitals.finger_detected ? 'bg-gradient-to-br from-red-500 to-rose-600' : 'bg-slate-100'}
           `}>
-            <div className="w-full h-full bg-white rounded-[2.3rem] flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"></div>
-              <div className="text-center relative z-10 transition-transform duration-300">
-                <span className="text-5xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
+            <div className="w-full h-full bg-white rounded-[1.8rem] flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none"></div>
+              <div className="text-center relative z-10">
+                <span className="text-3xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
                   {vitals.finger_detected && vitals.bpm > 0 ? vitals.bpm : "--"}
                 </span>
-                <div className="flex items-center justify-center space-x-2 mt-1">
-                  <span className={`w-1.5 h-1.5 bg-red-500 rounded-full ${vitals.finger_detected ? 'animate-ping' : ''}`}></span>
-                  <span className="text-xs font-bold text-red-600 uppercase tracking-widest opacity-80">BPM</span>
+                <div className="flex items-center justify-center space-x-1.5 mt-0.5">
+                  <span className={`w-1 h-1 bg-red-500 rounded-full ${vitals.finger_detected ? 'animate-ping' : ''}`}></span>
+                  <span className="text-[9px] font-bold text-red-600 uppercase tracking-widest">BPM</span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-left w-32">
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">Pulse Rate</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 leading-relaxed">Automatic heart sensor active.</p>
-          </div>
-        </div>
 
-        {/* SpO2 Section */}
-        <div className="relative flex items-center justify-center space-x-8 w-full">
+          {/* SpO2 Ring */}
           <div className={`
-            w-44 h-44 rounded-[2.5rem] p-1.5 transition-all duration-700 bg-white shadow-2xl relative
+            w-32 h-32 rounded-[2rem] p-1 transition-all duration-700 shadow-xl relative
             ${vitals.finger_detected ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-slate-100'}
           `}>
-            <div className="w-full h-full bg-white rounded-[2.3rem] flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
-              <div className="text-center relative z-10 transition-transform duration-300">
-                <span className="text-5xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
+            <div className="w-full h-full bg-white rounded-[1.8rem] flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
+              <div className="text-center relative z-10">
+                <span className="text-3xl font-bold text-slate-900 tracking-tighter tabular-nums leading-none">
                   {vitals.finger_detected && vitals.spo2 > 0 ? vitals.spo2 : "--"}
                 </span>
-                <div className="flex items-center justify-center space-x-2 mt-1">
-                  <span className={`w-1.5 h-1.5 bg-blue-500 rounded-full ${vitals.finger_detected ? 'animate-ping' : ''}`}></span>
-                  <span className="text-xs font-bold text-blue-600 uppercase tracking-widest opacity-80">% SpO2</span>
+                <div className="flex items-center justify-center space-x-1.5 mt-0.5">
+                  <span className={`w-1 h-1 bg-blue-500 rounded-full ${vitals.finger_detected ? 'animate-ping' : ''}`}></span>
+                  <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">SpO2 %</span>
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-left w-32">
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none">Oxygen</h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 leading-relaxed">Real-time SPO2 measurement.</p>
-          </div>
         </div>
 
-        {/* Status Prompt */}
-        <div className="mt-4 text-center">
-            <div className={`
-                inline-flex items-center space-x-3 px-6 py-3 rounded-2xl border transition-all duration-500
-                ${vitals.finger_detected ? 'bg-green-50 border-green-100 text-green-700' : 'bg-slate-50 border-slate-100 text-slate-400'}
-            `}>
-                <div className={`w-2.5 h-2.5 rounded-full ${vitals.finger_detected ? 'bg-green-500 animate-pulse' : 'bg-slate-300 animate-bounce'}`}></div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                    {vitals.finger_detected ? "Scanning Vitals..." : "Place Finger on Sensor"}
-                </span>
+        {/* Right Panel — Title & Instructions */}
+        <div className="text-left space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 uppercase tracking-tighter leading-none">Vitals Scan</h2>
+            <div className="flex items-center space-x-2">
+              <div className="flex-grow h-1 bg-slate-100 rounded-full overflow-hidden">
+                <div className={`h-full w-2/3 transition-all duration-1000 ${vitals.finger_detected ? 'bg-green-500 animate-[shimmer_2s_infinite]' : 'bg-slate-200'}`}></div>
+              </div>
             </div>
-        </div>
+          </div>
 
+          {/* Status Indicator */}
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${vitals.finger_detected ? 'bg-green-500 animate-pulse shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-slate-300'}`}></div>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em]">
+              {vitals.finger_detected ? "Finger Detected" : "Awaiting Finger"}
+            </span>
+          </div>
+
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] max-w-[200px] leading-relaxed">
+            Place your finger on the sensor and keep still for accurate readings.
+          </p>
+        </div>
       </div>
     </div>
   );
