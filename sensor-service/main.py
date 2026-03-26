@@ -2,7 +2,7 @@ import time
 import os
 import threading
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 import uvicorn
 from services.sensor_manager import SensorManager
 
@@ -20,7 +20,7 @@ class CalibrationRequest(BaseModel):
     reference_unit: float
     offset: float
 
-    @validator('reference_unit')
+    @field_validator('reference_unit')
     def reference_unit_nonzero(cls, v):
         if v == 0:
             raise ValueError('reference_unit cannot be zero')
