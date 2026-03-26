@@ -4,9 +4,13 @@ import { BACKEND_API_URL } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        const authHeader = req.headers.get('authorization');
         const response = await axios.get(`${BACKEND_API_URL}/api/calibration/HX711`, {
+            headers: {
+                ...(authHeader ? { Authorization: authHeader } : {})
+            },
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });
@@ -19,8 +23,12 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
+        const authHeader = req.headers.get('authorization');
         const response = await axios.post(`${BACKEND_API_URL}/api/calibration`, body, {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...(authHeader ? { Authorization: authHeader } : {})
+            },
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });

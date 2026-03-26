@@ -4,9 +4,13 @@ import { BACKEND_API_URL } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(req: Request) {
     try {
+        const authHeader = req.headers.get('authorization');
         const response = await axios.post(`${BACKEND_API_URL}/api/calibration/tare`, {}, {
+            headers: {
+                ...(authHeader ? { Authorization: authHeader } : {})
+            },
             validateStatus: () => true
         });
         return NextResponse.json(response.data, { status: response.status });
