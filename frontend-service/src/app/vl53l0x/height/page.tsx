@@ -43,7 +43,7 @@ export default function HeightPage() {
 
       <section className="w-full flex-grow flex items-center justify-center overflow-hidden relative z-10">
         <div className="w-full">
-          <HeightDisplay isActive={true} onBack={handleBack} />
+          <HeightDisplay isActive={true} onNext={handleBack} />
         </div>
       </section>
     </main>

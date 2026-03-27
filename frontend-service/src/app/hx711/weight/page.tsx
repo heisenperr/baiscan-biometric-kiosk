@@ -40,7 +40,7 @@ export default function WeightPage() {
 
       <section className="w-full flex-grow flex items-center justify-center overflow-hidden relative z-10">
         <div className="w-full">
-          <WeightDisplay isActive={true} onBack={handleBack} />
+          <WeightDisplay isActive={true} onNext={handleBack} />
         </div>
       </section>
     </main>

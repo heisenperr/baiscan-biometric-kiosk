@@ -13,10 +13,10 @@ interface HeightData {
 
 interface HeightDisplayProps {
   isActive: boolean;
-  onBack: () => void;
+  onNext: () => void;
 }
 
-export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) {
+export default function HeightDisplay({ isActive, onNext }: HeightDisplayProps) {
   const [height, setHeight] = useState<number | null>(null);
   const { socket } = useSocket();
   const isActiveRef = useRef(isActive);
@@ -54,18 +54,7 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
         />
       </div>
 
-      {/* Compact Back Button - High End Style */}
-      <button
-        onClick={onBack}
-        className="self-start mb-4 text-slate-400 hover:text-blue-600 transition-all flex items-center space-x-2 font-bold uppercase tracking-[0.25em] text-[10px] group active:scale-95"
-      >
-        <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center transition-all group-hover:border-blue-200 group-hover:shadow-md">
-          <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-          </svg>
-        </div>
-        <span className="opacity-60 group-hover:opacity-100">Cancel Scan</span>
-      </button>
+
 
       <div className="relative flex items-center justify-center space-x-16">
         {/* Premium Measurement Ring */}
@@ -103,6 +92,17 @@ export default function HeightDisplay({ isActive, onBack }: HeightDisplayProps) 
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] max-w-[200px] leading-relaxed">
             Automatic Sensor detection active. Please stand straight and stay still.
           </p>
+
+          {/* Next Button — Always Visible */}
+          <button
+            onClick={onNext}
+            className="mt-6 w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-95 animate-in fade-in zoom-in duration-500"
+          >
+            <span>Next</span>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
