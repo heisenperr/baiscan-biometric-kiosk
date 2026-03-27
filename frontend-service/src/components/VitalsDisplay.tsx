@@ -167,8 +167,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
   return (
     <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700 w-full max-w-2xl mx-auto overflow-hidden relative">
       {/* Mind Blown Icon */}
-      {/* Meme Image in Right Top - Adjusted Downward */}
-      <div className="absolute top-8 right-0 p-2 z-20 pointer-events-none">
+      <div className="absolute top-0 right-0 p-2 z-20 pointer-events-none">
         <Image
           src="/mindblown.jpg"
           alt="Mind Blown"
