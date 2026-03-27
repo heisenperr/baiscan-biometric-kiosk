@@ -86,14 +86,22 @@ export default function WeightDisplay({ isActive, onNext }: WeightDisplayProps) 
               </div>
             </div>
           </div>
+          {/* Status Indicator Area — Matching Vitals Structure */}
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_6px_rgba(59,130,246,0.5)]"></div>
+            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em]">
+              Precision Sensor Active
+            </span>
+          </div>
+
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] max-w-[200px] leading-relaxed">
             Automatic Sensor detection active. Please stand on the scale and stay still.
           </p>
 
-          {/* Next Button — Always Visible */}
+          {/* Next Button — Matching Vitals Style & Position */}
           <button
             onClick={onNext}
-            className="mt-6 w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black uppercase tracking-[0.2em] text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all active:scale-95 animate-in fade-in zoom-in duration-500"
+            className="mt-4 w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black uppercase tracking-[0.2em] text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/30 transition-all active:scale-95 animate-in fade-in zoom-in duration-500"
           >
             <span>Next</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
