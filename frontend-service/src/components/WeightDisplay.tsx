@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import { useSocket } from "@/context/SocketContext";
 import Image from "next/image";
-import { SOCKET_URL } from "@/lib/api";
 
 interface WeightData {
   sensor: string;
@@ -19,7 +18,7 @@ interface WeightDisplayProps {
 
 export default function WeightDisplay({ isActive, onBack }: WeightDisplayProps) {
   const [weight, setWeight] = useState<number | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const { socket } = useSocket();
   const isActiveRef = useRef(isActive);
 
   useEffect(() => {
@@ -27,26 +26,20 @@ export default function WeightDisplay({ isActive, onBack }: WeightDisplayProps) 
   }, [isActive]);
 
   useEffect(() => {
-    console.log(`[SOCKET] Connecting to backend...`);
+    if (!socket) return;
 
-    const socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
-      reconnectionAttempts: Number(process.env.NEXT_PUBLIC_SOCKET_RECONNECT_ATTEMPTS || 5)
-    });
-
-    socketRef.current = socket;
-
-    socket.on("sensor:weight", (data: WeightData) => {
+    const handleWeight = (data: WeightData) => {
       if (isActiveRef.current) {
         setWeight(data.value);
       }
-    });
+    };
+
+    socket.on("sensor:weight", handleWeight);
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      socket.off("sensor:weight", handleWeight);
     };
-  }, []);
+  }, [socket]);
 
   return (
     <div className="flex flex-col items-center animate-in fade-in zoom-in duration-700 w-full max-w-2xl mx-auto overflow-hidden relative">

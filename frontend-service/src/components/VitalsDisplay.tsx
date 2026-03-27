@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { io, Socket } from "socket.io-client";
+import React, { useEffect, useState, useRef } from "react";
+import { useSocket } from "@/context/SocketContext";
 import Image from "next/image";
-import { SOCKET_URL } from "@/lib/api";
 
 interface VitalsDisplayProps {
   isActive: boolean;
@@ -17,7 +16,7 @@ const STABILIZE_THRESHOLD_SPO2 = 2;
 
 export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) {
   const [vitals, setVitals] = useState({ bpm: 0, spo2: 0, finger_detected: false });
-  const socketRef = useRef<Socket | null>(null);
+  const { socket } = useSocket();
 
   // Capture state
   const [bpmCaptured, setBpmCaptured] = useState(false);
@@ -39,13 +38,9 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
 
   // Socket connection
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"],
-      reconnectionAttempts: 5
-    });
-    socketRef.current = socket;
+    if (!socket) return;
 
-    socket.on("sensor:vitals", (data: any) => {
+    const handleVitals = (data: any) => {
       if (isActive && data && typeof data === "object" && !Array.isArray(data)) {
         setVitals({
           bpm: typeof data.bpm === "number" ? data.bpm : 0,
@@ -53,10 +48,14 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
           finger_detected: !!data.finger_detected,
         });
       }
-    });
+    };
 
-    return () => { socket.disconnect(); };
-  }, [isActive]);
+    socket.on("sensor:vitals", handleVitals);
+
+    return () => {
+      socket.off("sensor:vitals", handleVitals);
+    };
+  }, [socket, isActive]);
 
   // Finger detection timing
   useEffect(() => {
@@ -81,7 +80,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
     }
 
     const now = Date.now();
-    
+
     // Only start stabilizing after the initial delay
     if (fingerDetectedAtRef.current === null || (now - fingerDetectedAtRef.current < STABILIZE_DELAY_MS)) {
       bpmStableStartRef.current = null;
@@ -180,7 +179,7 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
 
       {/* Two-Panel Layout: Vitals Left | Instructions Right */}
       <div className="relative flex items-center justify-center space-x-10 mt-4">
-        
+
         {/* Left Panel — Stacked Vitals Rings */}
         <div className="flex flex-col items-center space-y-5 flex-shrink-0">
           {/* BPM Ring */}
@@ -262,13 +261,13 @@ export default function VitalsDisplay({ isActive, onBack }: VitalsDisplayProps) 
           {/* Status Indicator */}
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full 
-              ${allCaptured ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" : 
+              ${allCaptured ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" :
                 vitals.finger_detected ? (
                   fingerDetectedAtRef.current && (Date.now() - fingerDetectedAtRef.current < STABILIZE_DELAY_MS) ? "bg-amber-400 animate-pulse" : "bg-blue-500 animate-pulse"
                 ) : "bg-slate-300"}`}
             ></div>
             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em]">
-              {allCaptured ? "All Vitals Captured" : 
+              {allCaptured ? "All Vitals Captured" :
                 vitals.finger_detected ? (
                   fingerDetectedAtRef.current && (Date.now() - fingerDetectedAtRef.current < STABILIZE_DELAY_MS) ? "Settling..." : "Stabilizing..."
                 ) : "Awaiting Finger"}

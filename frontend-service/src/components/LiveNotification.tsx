@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { SOCKET_URL } from '@/lib/api';
+import { useSocket } from '@/context/SocketContext';
 
 interface NotificationPayload {
     id: string;
@@ -15,38 +14,27 @@ interface NotificationPayload {
 
 export default function LiveNotification() {
     const [notifications, setNotifications] = useState<NotificationPayload[]>([]);
+    const { socket } = useSocket();
 
     useEffect(() => {
-        // Initialize socket connection
-        const socket: Socket = io(SOCKET_URL, {
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            autoConnect: true,
-        });
+        if (!socket) return;
 
-        socket.on('connect', () => {
-            console.log('[LiveNotification] Connected to WebSocket server');
-        });
-
-        socket.on('notification', (payload: NotificationPayload) => {
+        const handleNotification = (payload: NotificationPayload) => {
             console.log('[LiveNotification] Received broadcast:', payload);
-
             setNotifications((prev) => [...prev, payload]);
 
             // Auto-remove notification after its duration
             setTimeout(() => {
                 setNotifications((prev) => prev.filter(n => n.id !== payload.id));
             }, payload.duration);
-        });
+        };
 
-        socket.on('disconnect', () => {
-            console.log('[LiveNotification] Disconnected from WebSocket server');
-        });
+        socket.on('notification', handleNotification);
 
         return () => {
-            socket.disconnect();
+            socket.off('notification', handleNotification);
         };
-    }, []);
+    }, [socket]);
 
     if (notifications.length === 0) return null;
 

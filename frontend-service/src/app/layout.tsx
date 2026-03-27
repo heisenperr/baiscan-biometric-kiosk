@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Quicksand, Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { SocketProvider } from "@/context/SocketContext";
+import LiveNotification from "@/components/LiveNotification";
 import { cookies } from "next/headers";
 
 const quicksand = Quicksand({
@@ -34,7 +36,10 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <AuthProvider initialHasSession={hasSessionCookie}>
-          {children}
+          <SocketProvider>
+            <LiveNotification />
+            {children}
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>
